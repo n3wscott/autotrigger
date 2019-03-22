@@ -8,7 +8,7 @@ metadata:
     eventing.knative.dev/autotrigger: "true"
   annotations:
     trigger.eventing.knative.dev/filter: |
-      [{"type":"botless.slack.latency_report"}]
+      [{"type":"botless.slack.message"},{"type":"botless.bot.command"}]
 spec:
   runLatest:
     configuration:

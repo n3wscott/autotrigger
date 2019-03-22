@@ -16,7 +16,6 @@ limitations under the License.
 package resources
 
 import (
-	"context"
 	"github.com/knative/serving/pkg/apis/serving"
 	"github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	"strings"
@@ -26,7 +25,7 @@ const (
 	autoTriggerLabel = "eventing.knative.dev/autotrigger"
 )
 
-func AutoTriggerEnabled(ctx context.Context, s *v1alpha1.Service) bool {
+func AutoTriggerEnabled(s *v1alpha1.Service) bool {
 	if enabled, ok := s.Labels[autoTriggerLabel]; ok {
 		if strings.EqualFold(enabled, "true") {
 			return true

@@ -99,8 +99,7 @@ func (c *Reconciler) Reconcile(ctx context.Context, key string) error {
 		return nil
 	} else if err != nil {
 		return err
-	} else if !resources.AutoTriggerEnabled(ctx, original) {
-		logger.Errorf("service %q is not auto-triggered.", key)
+	} else if !resources.AutoTriggerEnabled(original) {
 		return nil
 	}
 
@@ -153,7 +152,7 @@ func filterTriggers(service *servingv1alpha1.Service, triggers []*eventingv1alph
 func (c *Reconciler) createTriggers(ctx context.Context, service *servingv1alpha1.Service) ([]*eventingv1alpha1.Trigger, error) {
 	logger := logging.FromContext(ctx)
 
-	triggers, err := resources.MakeTriggers(ctx, service)
+	triggers, err := resources.MakeTriggers(service)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +193,7 @@ func (c *Reconciler) reconcileTriggers(ctx context.Context, service *servingv1al
 
 	_ = logger
 
-	desiredTriggers, err := resources.MakeTriggers(ctx, service)
+	desiredTriggers, err := resources.MakeTriggers(service)
 	if err != nil {
 		return nil, err
 	}

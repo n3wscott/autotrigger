@@ -34,7 +34,6 @@ import (
 	"github.com/n3wscott/autotrigger/pkg/reconciler/v1alpha1/autotrigger"
 	"go.uber.org/zap"
 	"k8s.io/client-go/dynamic"
-	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
@@ -124,7 +123,6 @@ func main() {
 		StopChannel:       stopCh,
 	}
 
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, opt.ResyncPeriod)
 	servingInformerFactory := servinginformers.NewSharedInformerFactory(servingClient, opt.ResyncPeriod)
 
 	eventingInformerFactory := eventinginformers.NewSharedInformerFactory(eventingClient, opt.ResyncPeriod)
@@ -148,10 +146,10 @@ func main() {
 	// Watch the observability config map and dynamically update metrics exporter.
 	configMapWatcher.Watch(metrics.ObservabilityConfigName, metrics.UpdateExporterFromConfigMap(component, logger))
 
-	// These are non-blocking.
-	kubeInformerFactory.Start(stopCh)
-	servingInformerFactory.Start(stopCh)
-	eventingInformerFactory.Start(stopCh)
+	// These are blocking.
+	go serviceInformer.Informer().Run(stopCh)
+	go triggerInformer.Informer().Run(stopCh)
+
 	if err := configMapWatcher.Start(stopCh); err != nil {
 		logger.Fatalw("failed to start configuration manager", zap.Error(err))
 	}

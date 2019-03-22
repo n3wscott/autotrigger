@@ -17,12 +17,10 @@ limitations under the License.
 package resources
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/kmeta"
-	"github.com/knative/pkg/logging"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	"github.com/n3wscott/autotrigger/pkg/reconciler/v1alpha1/autotrigger/resources/names"
 	corev1 "k8s.io/api/core/v1"
@@ -40,9 +38,7 @@ type brokerFilters struct {
 }
 
 // MakeTrigger creates a Trigger from a Service object.
-func MakeTriggers(ctx context.Context, service *servingv1alpha1.Service) ([]*eventingv1alpha1.Trigger, error) {
-	logger := logging.FromContext(ctx)
-
+func MakeTriggers(service *servingv1alpha1.Service) ([]*eventingv1alpha1.Trigger, error) {
 	rawFilter, ok := service.Annotations[filterAnnotation]
 	if !ok {
 		return []*eventingv1alpha1.Trigger(nil), nil
@@ -55,17 +51,12 @@ func MakeTriggers(ctx context.Context, service *servingv1alpha1.Service) ([]*eve
 		return nil, fmt.Errorf("failed to extract auto-trigger from service: %s", err.Error())
 	}
 
-	logger.Errorf("found filters %+v for %s from %q", filters, service.Name, rawFilter)
-
 	triggers := make([]*eventingv1alpha1.Trigger, 0)
-
-	// Kind:       "Service",
-	// APIVersion: "serving.knative.dev/v1alpha1",
 
 	subscriber := &eventingv1alpha1.SubscriberSpec{
 		Ref: &corev1.ObjectReference{
-			APIVersion: "serving.knative.dev/v1alpha1", // service.APIVersion
-			Kind:       "Service",                      // service.Kind
+			APIVersion: "serving.knative.dev/v1alpha1",
+			Kind:       "Service",
 			Name:       service.Name,
 		},
 	}
@@ -93,8 +84,6 @@ func MakeTriggers(ctx context.Context, service *servingv1alpha1.Service) ([]*eve
 		}
 		triggers = append(triggers, t)
 	}
-
-	logger.Errorf("made %d triggers for %s", len(triggers), service.Name)
 
 	return triggers, nil
 }
