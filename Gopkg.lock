@@ -305,7 +305,7 @@
   revision = "3fc06fd3c9880a9ebb5c401f4b20cf6666cc7bc0"
 
 [[projects]]
-  digest = "1:9432ed814362869160c51d81f941a916881b7a1624de2291e66451bb490fade7"
+  digest = "1:1ef97cf8c0d4028129ea1a5a7a50786e53377eef61df8d8e3c34d5a39837f8ad"
   name = "github.com/knative/eventing"
   packages = [
     "pkg/apis/duck/v1alpha1",
@@ -314,6 +314,10 @@
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
+    "pkg/client/informers/externalversions",
+    "pkg/client/informers/externalversions/eventing",
+    "pkg/client/informers/externalversions/eventing/v1alpha1",
+    "pkg/client/informers/externalversions/internalinterfaces",
     "pkg/client/listers/eventing/v1alpha1",
   ]
   pruneopts = "UT"
@@ -1029,6 +1033,8 @@
     "github.com/knative/caching/pkg/client/clientset/versioned",
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/client/clientset/versioned",
+    "github.com/knative/eventing/pkg/client/informers/externalversions",
+    "github.com/knative/eventing/pkg/client/informers/externalversions/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/client/listers/eventing/v1alpha1",
     "github.com/knative/pkg/client/clientset/versioned",
     "github.com/knative/pkg/configmap",

@@ -22,6 +22,7 @@ import (
 	"go.uber.org/zap"
 
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
+	eventinginformers "github.com/knative/eventing/pkg/client/informers/externalversions/eventing/v1alpha1"
 	eventinglisters "github.com/knative/eventing/pkg/client/listers/eventing/v1alpha1"
 	"github.com/knative/pkg/controller"
 	"github.com/knative/pkg/logging"
@@ -60,11 +61,13 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 func NewController(
 	opt reconciler.Options,
 	serviceInformer servinginformers.ServiceInformer,
+	triggerInformer eventinginformers.TriggerInformer,
 ) *controller.Impl {
 
 	c := &Reconciler{
 		Base:          reconciler.NewBase(opt, controllerAgentName),
 		serviceLister: serviceInformer.Lister(),
+		triggerLister: triggerInformer.Lister(),
 	}
 	impl := controller.NewImpl(c, c.Logger, ReconcilerName, reconciler.MustNewStatsReporter(ReconcilerName, c.Logger))
 

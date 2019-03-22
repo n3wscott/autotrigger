@@ -18,8 +18,8 @@ package main
 
 import (
 	"flag"
-	cachingclientset "github.com/knative/caching/pkg/client/clientset/versioned"
 	eventingclientset "github.com/knative/eventing/pkg/client/clientset/versioned"
+	eventinginformers "github.com/knative/eventing/pkg/client/informers/externalversions"
 	sharedclientset "github.com/knative/pkg/client/clientset/versioned"
 	"github.com/knative/pkg/configmap"
 	"github.com/knative/pkg/controller"
@@ -27,7 +27,7 @@ import (
 	"github.com/knative/pkg/system"
 	"github.com/knative/pkg/version"
 	servingclientset "github.com/knative/serving/pkg/client/clientset/versioned"
-	informers "github.com/knative/serving/pkg/client/informers/externalversions"
+	servinginformers "github.com/knative/serving/pkg/client/informers/externalversions"
 	"github.com/n3wscott/autotrigger/pkg/logging"
 	"github.com/n3wscott/autotrigger/pkg/metrics"
 	"github.com/n3wscott/autotrigger/pkg/reconciler"
@@ -48,7 +48,7 @@ import (
 
 const (
 	threadsPerController = 2
-	component            = "autotrigger-controller"
+	component            = "autotriggercontroller"
 )
 
 var (
@@ -104,12 +104,7 @@ func main() {
 
 	dynamicClient, err := dynamic.NewForConfig(cfg)
 	if err != nil {
-		logger.Fatalw("Error building build clientset", zap.Error(err))
-	}
-
-	cachingClient, err := cachingclientset.NewForConfig(cfg)
-	if err != nil {
-		logger.Fatalw("Error building caching clientset", zap.Error(err))
+		logger.Fatalw("Error building dynamic clientset", zap.Error(err))
 	}
 
 	if err := version.CheckMinimumVersion(kubeClient.Discovery()); err != nil {
@@ -122,7 +117,6 @@ func main() {
 		KubeClientSet:     kubeClient,
 		ServingClientSet:  servingClient,
 		EventingClientSet: eventingClient,
-		CachingClientSet:  cachingClient,
 		DynamicClientSet:  dynamicClient,
 		ConfigMapWatcher:  configMapWatcher,
 		Logger:            logger,
@@ -131,10 +125,13 @@ func main() {
 	}
 
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, opt.ResyncPeriod)
-	servingInformerFactory := informers.NewSharedInformerFactory(servingClient, opt.ResyncPeriod)
+	servingInformerFactory := servinginformers.NewSharedInformerFactory(servingClient, opt.ResyncPeriod)
+
+	eventingInformerFactory := eventinginformers.NewSharedInformerFactory(eventingClient, opt.ResyncPeriod)
 
 	serviceInformer := servingInformerFactory.Serving().V1alpha1().Services()
-	configMapInformer := kubeInformerFactory.Core().V1().ConfigMaps()
+
+	triggerInformer := eventingInformerFactory.Eventing().V1alpha1().Triggers()
 
 	// Build all of our controllers, with the clients constructed above.
 	// Add new controllers to this array.
@@ -142,6 +139,7 @@ func main() {
 		autotrigger.NewController(
 			opt,
 			serviceInformer,
+			triggerInformer,
 		),
 	}
 
@@ -153,6 +151,7 @@ func main() {
 	// These are non-blocking.
 	kubeInformerFactory.Start(stopCh)
 	servingInformerFactory.Start(stopCh)
+	eventingInformerFactory.Start(stopCh)
 	if err := configMapWatcher.Start(stopCh); err != nil {
 		logger.Fatalw("failed to start configuration manager", zap.Error(err))
 	}
@@ -161,7 +160,7 @@ func main() {
 	logger.Info("Waiting for informer caches to sync")
 	for i, synced := range []cache.InformerSynced{
 		serviceInformer.Informer().HasSynced,
-		configMapInformer.Informer().HasSynced,
+		triggerInformer.Informer().HasSynced,
 	} {
 		if ok := cache.WaitForCacheSync(stopCh, synced); !ok {
 			logger.Fatalf("Failed to wait for cache at index %d to sync", i)
