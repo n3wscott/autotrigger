@@ -17,10 +17,12 @@ limitations under the License.
 package resources
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/kmeta"
+	"github.com/knative/pkg/logging"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	"github.com/n3wscott/autotrigger/pkg/reconciler/v1alpha1/autotrigger/resources/names"
 	corev1 "k8s.io/api/core/v1"
@@ -28,7 +30,7 @@ import (
 )
 
 const (
-	filterAnnotation = "autotrigger.eventing.knative.dev/filter"
+	filterAnnotation = "trigger.eventing.knative.dev/filter"
 )
 
 type brokerFilters struct {
@@ -38,7 +40,8 @@ type brokerFilters struct {
 }
 
 // MakeTrigger creates a Trigger from a Service object.
-func MakeTriggers(service *servingv1alpha1.Service) ([]*eventingv1alpha1.Trigger, error) {
+func MakeTriggers(ctx context.Context, service *servingv1alpha1.Service) ([]*eventingv1alpha1.Trigger, error) {
+	logger := logging.FromContext(ctx)
 
 	rawFilter, ok := service.Annotations[filterAnnotation]
 	if !ok {
@@ -46,19 +49,23 @@ func MakeTriggers(service *servingv1alpha1.Service) ([]*eventingv1alpha1.Trigger
 	}
 
 	filters := make([]brokerFilters, 0)
-	if err := json.Unmarshal([]byte(rawFilter), filters); err != nil {
+	if rawFilter == "" || rawFilter == "[{}]" || rawFilter == "[]" {
+		filters = append(filters, brokerFilters{})
+	} else if err := json.Unmarshal([]byte(rawFilter), &filters); err != nil {
 		return nil, fmt.Errorf("failed to extract auto-trigger from service: %s", err.Error())
 	}
 
-	triggers := make([]*eventingv1alpha1.Trigger, len(filters))
+	logger.Errorf("found filters %+v for %s from %q", filters, service.Name, rawFilter)
+
+	triggers := make([]*eventingv1alpha1.Trigger, 0)
 
 	// Kind:       "Service",
 	// APIVersion: "serving.knative.dev/v1alpha1",
 
 	subscriber := &eventingv1alpha1.SubscriberSpec{
 		Ref: &corev1.ObjectReference{
-			APIVersion: service.APIVersion,
-			Kind:       service.Kind,
+			APIVersion: "serving.knative.dev/v1alpha1", // service.APIVersion
+			Kind:       "Service",                      // service.Kind
 			Name:       service.Name,
 		},
 	}
@@ -66,8 +73,8 @@ func MakeTriggers(service *servingv1alpha1.Service) ([]*eventingv1alpha1.Trigger
 	for _, filter := range filters {
 		t := &eventingv1alpha1.Trigger{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      names.Trigger(service),
-				Namespace: service.Namespace,
+				GenerateName: names.Trigger(service) + "-",
+				Namespace:    service.Namespace,
 				OwnerReferences: []metav1.OwnerReference{
 					*kmeta.NewControllerRef(service),
 				},
@@ -86,5 +93,8 @@ func MakeTriggers(service *servingv1alpha1.Service) ([]*eventingv1alpha1.Trigger
 		}
 		triggers = append(triggers, t)
 	}
+
+	logger.Errorf("made %d triggers for %s", len(triggers), service.Name)
+
 	return triggers, nil
 }

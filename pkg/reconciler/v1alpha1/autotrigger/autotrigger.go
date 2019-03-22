@@ -99,6 +99,9 @@ func (c *Reconciler) Reconcile(ctx context.Context, key string) error {
 		return nil
 	} else if err != nil {
 		return err
+	} else if !resources.AutoTriggerEnabled(ctx, original) {
+		logger.Errorf("service %q is not auto-triggered.", key)
+		return nil
 	}
 
 	// Don't modify the informers copy
@@ -121,7 +124,7 @@ func (c *Reconciler) reconcile(ctx context.Context, service *servingv1alpha1.Ser
 	triggers = filterTriggers(service, triggers)
 
 	if errors.IsNotFound(err) || len(triggers) == 0 { // TODO: might not get an IsNotFound error for list.
-		triggers, err = c.createTriggers(service)
+		triggers, err = c.createTriggers(ctx, service)
 		if err != nil {
 			logger.Errorf("Failed to create Triggers for Service %q: %v", service.Name, err)
 			return err
@@ -147,8 +150,10 @@ func filterTriggers(service *servingv1alpha1.Service, triggers []*eventingv1alph
 	return filteredTriggers
 }
 
-func (c *Reconciler) createTriggers(service *servingv1alpha1.Service) ([]*eventingv1alpha1.Trigger, error) {
-	triggers, err := resources.MakeTriggers(service)
+func (c *Reconciler) createTriggers(ctx context.Context, service *servingv1alpha1.Service) ([]*eventingv1alpha1.Trigger, error) {
+	logger := logging.FromContext(ctx)
+
+	triggers, err := resources.MakeTriggers(ctx, service)
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +162,7 @@ func (c *Reconciler) createTriggers(service *servingv1alpha1.Service) ([]*eventi
 	for _, trigger := range triggers {
 		createdTrigger, err := c.EventingClientSet.EventingV1alpha1().Triggers(service.Namespace).Create(trigger)
 		if err != nil {
+			logger.Errorf("failed to create trigger: %+v, %s", trigger, err.Error())
 			retErr = err
 			break
 		}
@@ -188,7 +194,7 @@ func (c *Reconciler) reconcileTriggers(ctx context.Context, service *servingv1al
 
 	_ = logger
 
-	desiredTriggers, err := resources.MakeTriggers(service)
+	desiredTriggers, err := resources.MakeTriggers(ctx, service)
 	if err != nil {
 		return nil, err
 	}

@@ -7,13 +7,8 @@ metadata:
   labels:
     eventing.knative.dev/autotrigger: "true"
   annotations:
-    autotrigger.eventing.knative.dev/filter:
-    - broker: default
-      type: some.example
-      source: http://something.com/
-    - broker: special
-      type: some.example
-      source: http://something.com/
+    trigger.eventing.knative.dev/filter: |
+      [{"type":"botless.slack.latency_report"}]
 spec:
   runLatest:
     configuration:
