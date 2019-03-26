@@ -17,30 +17,22 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
-	eventingclientset "github.com/knative/eventing/pkg/client/clientset/versioned"
 	eventinginformers "github.com/knative/eventing/pkg/client/informers/externalversions"
-	sharedclientset "github.com/knative/pkg/client/clientset/versioned"
 	"github.com/knative/pkg/configmap"
 	"github.com/knative/pkg/controller"
 	"github.com/knative/pkg/signals"
 	"github.com/knative/pkg/system"
-	"github.com/knative/pkg/version"
-	servingclientset "github.com/knative/serving/pkg/client/clientset/versioned"
 	servinginformers "github.com/knative/serving/pkg/client/informers/externalversions"
 	"github.com/n3wscott/autotrigger/pkg/logging"
 	"github.com/n3wscott/autotrigger/pkg/metrics"
 	"github.com/n3wscott/autotrigger/pkg/reconciler"
 	"github.com/n3wscott/autotrigger/pkg/reconciler/v1alpha1/autotrigger"
 	"go.uber.org/zap"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	"log"
-	"time"
-
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
@@ -80,52 +72,11 @@ func main() {
 	cfg.QPS = 6 * rest.DefaultQPS
 	cfg.Burst = 6 * rest.DefaultBurst
 
-	kubeClient, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		logger.Fatalw("Error building kubernetes clientset", zap.Error(err))
-	}
+	opts := reconciler.NewOptions(context.Background(), cfg, stopCh)
 
-	sharedClient, err := sharedclientset.NewForConfig(cfg)
-	if err != nil {
-		logger.Fatalw("Error building shared clientset", zap.Error(err))
-	}
-	_ = sharedClient
+	servingInformerFactory := servinginformers.NewSharedInformerFactory(opts.ServingClientSet, opts.ResyncPeriod)
 
-	servingClient, err := servingclientset.NewForConfig(cfg)
-	if err != nil {
-		logger.Fatalw("Error building serving clientset", zap.Error(err))
-	}
-
-	eventingClient, err := eventingclientset.NewForConfig(cfg)
-	if err != nil {
-		logger.Fatalw("Error building eventing clientset", zap.Error(err))
-	}
-
-	dynamicClient, err := dynamic.NewForConfig(cfg)
-	if err != nil {
-		logger.Fatalw("Error building dynamic clientset", zap.Error(err))
-	}
-
-	if err := version.CheckMinimumVersion(kubeClient.Discovery()); err != nil {
-		logger.Fatalf("Version check failed: %v", err)
-	}
-
-	configMapWatcher := configmap.NewInformedWatcher(kubeClient, system.Namespace())
-
-	opt := reconciler.Options{
-		KubeClientSet:     kubeClient,
-		ServingClientSet:  servingClient,
-		EventingClientSet: eventingClient,
-		DynamicClientSet:  dynamicClient,
-		ConfigMapWatcher:  configMapWatcher,
-		Logger:            logger,
-		ResyncPeriod:      10 * time.Hour, // Based on controller-runtime default.
-		StopChannel:       stopCh,
-	}
-
-	servingInformerFactory := servinginformers.NewSharedInformerFactory(servingClient, opt.ResyncPeriod)
-
-	eventingInformerFactory := eventinginformers.NewSharedInformerFactory(eventingClient, opt.ResyncPeriod)
+	eventingInformerFactory := eventinginformers.NewSharedInformerFactory(opts.EventingClientSet, opts.ResyncPeriod)
 
 	serviceInformer := servingInformerFactory.Serving().V1alpha1().Services()
 
@@ -135,47 +86,29 @@ func main() {
 	// Add new controllers to this array.
 	controllers := []*controller.Impl{
 		autotrigger.NewController(
-			opt,
+			opts,
 			serviceInformer,
 			triggerInformer,
 		),
 	}
 
+	configMapWatcher := configmap.NewInformedWatcher(opts.KubeClientSet, system.Namespace())
 	// Watch the logging config map and dynamically update logging levels.
 	configMapWatcher.Watch(logging.ConfigName, logging.UpdateLevelFromConfigMap(logger, atomicLevel, component))
 	// Watch the observability config map and dynamically update metrics exporter.
 	configMapWatcher.Watch(metrics.ObservabilityConfigName, metrics.UpdateExporterFromConfigMap(component, logger))
 
-	// These are blocking.
-	go serviceInformer.Informer().Run(stopCh)
-	go triggerInformer.Informer().Run(stopCh)
+	if err := controller.StartInformers(stopCh, serviceInformer.Informer(), triggerInformer.Informer()); err != nil {
+		logger.Fatalw("failed to start informers", zap.Error(err))
+	}
 
 	if err := configMapWatcher.Start(stopCh); err != nil {
 		logger.Fatalw("failed to start configuration manager", zap.Error(err))
 	}
 
-	// Wait for the caches to be synced before starting controllers.
-	logger.Info("Waiting for informer caches to sync")
-	for i, synced := range []cache.InformerSynced{
-		serviceInformer.Informer().HasSynced,
-		triggerInformer.Informer().HasSynced,
-	} {
-		if ok := cache.WaitForCacheSync(stopCh, synced); !ok {
-			logger.Fatalf("Failed to wait for cache at index %d to sync", i)
-		}
-	}
-
 	// Start all of the controllers.
 	logger.Info("Starting....")
-	for _, ctrlr := range controllers {
-		go func(ctrlr *controller.Impl) {
-			// We don't expect this to return until stop is called,
-			// but if it does, propagate it back.
-			if runErr := ctrlr.Run(threadsPerController, stopCh); runErr != nil {
-				logger.Fatalw("Error running controller", zap.Error(runErr))
-			}
-		}(ctrlr)
-	}
+	controller.StartAll(stopCh, controllers...)
 
 	<-stopCh
 }

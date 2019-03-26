@@ -324,7 +324,7 @@
   revision = "4d7c827969e5d30400d23b9687c0450079c2e11e"
 
 [[projects]]
-  digest = "1:436830b16a4fc2bad68208ffcbe6da7eecffde6b19ab034227f6e74a7d026d7e"
+  digest = "1:d1ad59220bc0e0b896ce5caa85f5091a8188e58dc10d0f38096adb1a4ef92ba0"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -354,7 +354,8 @@
     "webhook",
   ]
   pruneopts = "UT"
-  revision = "60fdcbcabd2faeb34328d8b2725dc76c59189453"
+  revision = "d4b8b65b25fb5bc7e4782c8198d25ed5fc4203ea"
+  source = "github.com/n3wscott/pkg"
 
 [[projects]]
   digest = "1:8d86dd61587e1648efb8bf2fa6b98ce48a1d653bc6cd40a97f1c32bd681c610f"
@@ -1045,7 +1046,6 @@
     "github.com/knative/pkg/metrics",
     "github.com/knative/pkg/signals",
     "github.com/knative/pkg/system",
-    "github.com/knative/pkg/version",
     "github.com/knative/serving/pkg/apis/serving",
     "github.com/knative/serving/pkg/apis/serving/v1alpha1",
     "github.com/knative/serving/pkg/client/clientset/versioned",
@@ -1064,7 +1064,6 @@
     "k8s.io/apimachinery/pkg/labels",
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/dynamic",
-    "k8s.io/client-go/informers",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/kubernetes/typed/core/v1",

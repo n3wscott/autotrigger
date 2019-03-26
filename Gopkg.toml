@@ -5,7 +5,8 @@
 [[override]]
   name = "github.com/knative/pkg"
   # HEAD as of 2019-03-21
-  revision = "60fdcbcabd2faeb34328d8b2725dc76c59189453"
+  source = "github.com/n3wscott/pkg"
+  revision = "d4b8b65b25fb5bc7e4782c8198d25ed5fc4203ea"
 
 [[constraint]]
   name = "github.com/knative/serving"

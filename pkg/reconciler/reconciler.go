@@ -17,6 +17,10 @@ limitations under the License.
 package reconciler
 
 import (
+	"context"
+	"github.com/knative/pkg/controller"
+	"github.com/knative/pkg/logging"
+	"k8s.io/client-go/rest"
 	"time"
 
 	"go.uber.org/zap"
@@ -40,23 +44,35 @@ import (
 // We define this to reduce the boilerplate argument list when
 // creating our controllers.
 type Options struct {
-	KubeClientSet   kubernetes.Interface
-	SharedClientSet sharedclientset.Interface
+	// Include base options
+	controller.Options
 
 	// These are custom:
 	ServingClientSet  servingclientset.Interface
 	EventingClientSet eventingclientset.Interface
 
-	DynamicClientSet dynamic.Interface
-	CachingClientSet cachingclientset.Interface
-	Recorder         record.EventRecorder
-	StatsReporter    StatsReporter
+	StatsReporter StatsReporter
+}
 
-	ConfigMapWatcher configmap.Watcher
-	Logger           *zap.SugaredLogger
+func NewOptions(ctx context.Context, cfg *rest.Config, stopCh <-chan struct{}) Options {
+	logger := logging.FromContext(ctx)
 
-	ResyncPeriod time.Duration
-	StopChannel  <-chan struct{}
+	servingClient, err := servingclientset.NewForConfig(cfg)
+	if err != nil {
+		logger.Fatalw("Error building serving clientset", zap.Error(err))
+	}
+
+	eventingClient, err := eventingclientset.NewForConfig(cfg)
+	if err != nil {
+		logger.Fatalw("Error building eventing clientset", zap.Error(err))
+	}
+
+	opts := Options{
+		Options:           controller.NewOptions(ctx, cfg, stopCh),
+		ServingClientSet:  servingClient,
+		EventingClientSet: eventingClient,
+	}
+	return opts
 }
 
 // GetTrackerLease returns a multiple of the resync period to use as the
