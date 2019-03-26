@@ -249,14 +249,6 @@
   version = "v0.5.1"
 
 [[projects]]
-  digest = "1:a0cefd27d12712af4b5018dc7046f245e1e3b5760e2e848c30b171b570708f9b"
-  name = "github.com/imdario/mergo"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "7c29201646fa3de8506f701213473dd407f19646"
-  version = "v0.3.7"
-
-[[projects]]
   digest = "1:bb81097a5b62634f3e9fec1014657855610c82d19b9a40c17612e32651e35dca"
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
@@ -305,7 +297,7 @@
   revision = "3fc06fd3c9880a9ebb5c401f4b20cf6666cc7bc0"
 
 [[projects]]
-  digest = "1:1ef97cf8c0d4028129ea1a5a7a50786e53377eef61df8d8e3c34d5a39837f8ad"
+  digest = "1:cfeb8448306a12517d3d8bb325619b35b03a6641b9959c9a1e74be02b6c68afd"
   name = "github.com/knative/eventing"
   packages = [
     "pkg/apis/duck/v1alpha1",
@@ -314,8 +306,6 @@
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
-    "pkg/client/informers/externalversions",
-    "pkg/client/informers/externalversions/eventing",
     "pkg/client/informers/externalversions/eventing/v1alpha1",
     "pkg/client/informers/externalversions/internalinterfaces",
     "pkg/client/listers/eventing/v1alpha1",
@@ -324,7 +314,7 @@
   revision = "4d7c827969e5d30400d23b9687c0450079c2e11e"
 
 [[projects]]
-  digest = "1:d1ad59220bc0e0b896ce5caa85f5091a8188e58dc10d0f38096adb1a4ef92ba0"
+  digest = "1:e595fb6589a9add45583076a9a4f048aa09235d7bece23de134067dcdff27ea7"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -348,8 +338,6 @@
     "logging/logkey",
     "metrics",
     "metrics/metricskey",
-    "signals",
-    "system",
     "version",
     "webhook",
   ]
@@ -358,7 +346,7 @@
   source = "github.com/n3wscott/pkg"
 
 [[projects]]
-  digest = "1:8d86dd61587e1648efb8bf2fa6b98ce48a1d653bc6cd40a97f1c32bd681c610f"
+  digest = "1:330ffdee7afd93bb557beea5a15decb29f5177bab211d64bde0bb401dea6391f"
   name = "github.com/knative/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -372,16 +360,8 @@
     "pkg/client/clientset/versioned/typed/autoscaling/v1alpha1",
     "pkg/client/clientset/versioned/typed/networking/v1alpha1",
     "pkg/client/clientset/versioned/typed/serving/v1alpha1",
-    "pkg/client/informers/externalversions",
-    "pkg/client/informers/externalversions/autoscaling",
-    "pkg/client/informers/externalversions/autoscaling/v1alpha1",
     "pkg/client/informers/externalversions/internalinterfaces",
-    "pkg/client/informers/externalversions/networking",
-    "pkg/client/informers/externalversions/networking/v1alpha1",
-    "pkg/client/informers/externalversions/serving",
     "pkg/client/informers/externalversions/serving/v1alpha1",
-    "pkg/client/listers/autoscaling/v1alpha1",
-    "pkg/client/listers/networking/v1alpha1",
     "pkg/client/listers/serving/v1alpha1",
     "pkg/utils",
   ]
@@ -509,14 +489,6 @@
   pruneopts = "UT"
   revision = "1cf9852c553c5b7da2d5a4a091129a7822fed0c9"
   version = "v1.2.2"
-
-[[projects]]
-  digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
-  name = "github.com/spf13/pflag"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
-  version = "v1.0.3"
 
 [[projects]]
   digest = "1:9969d9224bfb807fae791954b8f8be084918f876711d4369b99e0343acdaf65c"
@@ -876,7 +848,7 @@
   version = "kubernetes-1.12.6"
 
 [[projects]]
-  digest = "1:02e75164380d72b949e44908f09089b9b95a679d12b8bbcc685d5ef11ab59e4e"
+  digest = "1:7b5d601c3fb62c89e32d7893c0f81669700a89c982c9fc4807dbd4819259a15d"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -990,16 +962,10 @@
     "pkg/apis/clientauthentication/v1beta1",
     "pkg/version",
     "plugin/pkg/client/auth/exec",
-    "plugin/pkg/client/auth/gcp",
     "rest",
     "rest/watch",
-    "third_party/forked/golang/template",
-    "tools/auth",
     "tools/cache",
-    "tools/clientcmd",
     "tools/clientcmd/api",
-    "tools/clientcmd/api/latest",
-    "tools/clientcmd/api/v1",
     "tools/metrics",
     "tools/pager",
     "tools/record",
@@ -1009,9 +975,7 @@
     "util/cert",
     "util/connrotation",
     "util/flowcontrol",
-    "util/homedir",
     "util/integer",
-    "util/jsonpath",
     "util/retry",
     "util/workqueue",
   ]
@@ -1034,7 +998,6 @@
     "github.com/knative/caching/pkg/client/clientset/versioned",
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/client/clientset/versioned",
-    "github.com/knative/eventing/pkg/client/informers/externalversions",
     "github.com/knative/eventing/pkg/client/informers/externalversions/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/client/listers/eventing/v1alpha1",
     "github.com/knative/pkg/client/clientset/versioned",
@@ -1044,12 +1007,9 @@
     "github.com/knative/pkg/logging",
     "github.com/knative/pkg/logging/logkey",
     "github.com/knative/pkg/metrics",
-    "github.com/knative/pkg/signals",
-    "github.com/knative/pkg/system",
     "github.com/knative/serving/pkg/apis/serving",
     "github.com/knative/serving/pkg/apis/serving/v1alpha1",
     "github.com/knative/serving/pkg/client/clientset/versioned",
-    "github.com/knative/serving/pkg/client/informers/externalversions",
     "github.com/knative/serving/pkg/client/informers/externalversions/serving/v1alpha1",
     "github.com/knative/serving/pkg/client/listers/serving/v1alpha1",
     "github.com/knative/serving/pkg/utils",
@@ -1067,10 +1027,8 @@
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/kubernetes/typed/core/v1",
-    "k8s.io/client-go/plugin/pkg/client/auth/gcp",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/cache",
-    "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/tools/record",
   ]
   solver-name = "gps-cdcl"

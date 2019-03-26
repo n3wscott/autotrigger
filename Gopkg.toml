@@ -33,3 +33,8 @@
 [[override]]
   name = "k8s.io/client-go"
   version = "kubernetes-1.12.6"
+
+# 0.1.9 is most recent version that still uses K8s 1.12. 0.1.10 uses K8s 1.13.
+[[constraint]]
+  name = "sigs.k8s.io/controller-runtime"
+  version = "=0.1.9"
