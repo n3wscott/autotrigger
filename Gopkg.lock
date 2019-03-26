@@ -324,7 +324,7 @@
   revision = "4d7c827969e5d30400d23b9687c0450079c2e11e"
 
 [[projects]]
-  digest = "1:d1ad59220bc0e0b896ce5caa85f5091a8188e58dc10d0f38096adb1a4ef92ba0"
+  digest = "1:a9383043e5a24cc6a9b5a5df05b2569f876267e7526b84e0b2b0a9c1f8721808"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -354,7 +354,7 @@
     "webhook",
   ]
   pruneopts = "UT"
-  revision = "d4b8b65b25fb5bc7e4782c8198d25ed5fc4203ea"
+  revision = "4f565ed3d3205eefcb81f76a38728e3acb4eb462"
   source = "github.com/n3wscott/pkg"
 
 [[projects]]
@@ -1044,8 +1044,6 @@
     "github.com/knative/pkg/logging",
     "github.com/knative/pkg/logging/logkey",
     "github.com/knative/pkg/metrics",
-    "github.com/knative/pkg/signals",
-    "github.com/knative/pkg/system",
     "github.com/knative/serving/pkg/apis/serving",
     "github.com/knative/serving/pkg/apis/serving/v1alpha1",
     "github.com/knative/serving/pkg/client/clientset/versioned",

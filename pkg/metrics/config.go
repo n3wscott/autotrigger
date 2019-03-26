@@ -27,6 +27,12 @@ const (
 	metricsDomain           = "knative.dev/eventing/autotrigger"
 )
 
+// UpdateLogLevelFromConfigMap returns a helper func that can be used to update the exporter
+// when a config map is updated
+func NewObserverLoggingDecorator(component string) metrics.ObserverDecorator {
+	return metrics.NewObserverLoggingDecorator(metricsDomain, component)
+}
+
 // UpdateExporterFromConfigMap returns a helper func that can be used to update the exporter
 // when a config map is updated
 func UpdateExporterFromConfigMap(component string, logger *zap.SugaredLogger) func(configMap *corev1.ConfigMap) {
