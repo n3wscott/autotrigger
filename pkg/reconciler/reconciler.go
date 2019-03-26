@@ -18,13 +18,13 @@ package reconciler
 
 import (
 	"context"
+	eventingclientset "github.com/knative/eventing/pkg/client/clientset/versioned"
 	"github.com/knative/pkg/controller"
 	"github.com/knative/pkg/logging"
-	"k8s.io/client-go/rest"
-
-	eventingclientset "github.com/knative/eventing/pkg/client/clientset/versioned"
+	"github.com/knative/pkg/reconciler"
 	servingclientset "github.com/knative/serving/pkg/client/clientset/versioned"
 	"go.uber.org/zap"
+	"k8s.io/client-go/rest"
 )
 
 const (
@@ -68,7 +68,7 @@ func NewOptions(ctx context.Context, cfg *rest.Config, stopCh <-chan struct{}) O
 
 // Base implements the core controller logic, given a Reconciler.
 type Base struct {
-	*controller.Base
+	*reconciler.Base
 
 	// ServingClientSet allows us to configure Serving objects
 	ServingClientSet servingclientset.Interface
@@ -83,7 +83,7 @@ type Base struct {
 // NewBase instantiates a new instance of Base implementing
 // the common & boilerplate code between our reconcilers.
 func NewBase(opt Options, controllerAgentName string) *Base {
-	base := controller.NewBase(opt.Options, controllerAgentName)
+	base := reconciler.NewBase(opt.Options, controllerAgentName)
 
 	statsReporter := opt.StatsReporter
 	if statsReporter == nil {

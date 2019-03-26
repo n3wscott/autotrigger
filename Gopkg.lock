@@ -310,7 +310,7 @@
   revision = "4d7c827969e5d30400d23b9687c0450079c2e11e"
 
 [[projects]]
-  digest = "1:bad3fb21989089e11570fd1efe28e12ad582a76bc2efa71a8d1eae84c0ddf38f"
+  digest = "1:4f09d56152ad98c8e79051e6e3b0310357f17bffa8f161c753f7fb53ba2657a3"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -334,13 +334,14 @@
     "logging/logkey",
     "metrics",
     "metrics/metricskey",
+    "reconciler",
     "signals",
     "system",
     "version",
     "webhook",
   ]
   pruneopts = "UT"
-  revision = "924634750b72458920be140517ca4ab26cbc847e"
+  revision = "3916142a63173292fbf867f610e530bf27fd33bb"
   source = "github.com/n3wscott/pkg"
 
 [[projects]]
@@ -1026,6 +1027,7 @@
     "github.com/knative/pkg/kmeta",
     "github.com/knative/pkg/logging",
     "github.com/knative/pkg/metrics",
+    "github.com/knative/pkg/reconciler",
     "github.com/knative/pkg/signals",
     "github.com/knative/pkg/system",
     "github.com/knative/serving/pkg/apis/serving",
