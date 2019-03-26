@@ -22,10 +22,10 @@ import (
 	eventinginformers "github.com/knative/eventing/pkg/client/informers/externalversions"
 	"github.com/knative/pkg/configmap"
 	"github.com/knative/pkg/controller"
+	"github.com/knative/pkg/logging"
 	"github.com/knative/pkg/signals"
 	"github.com/knative/pkg/system"
 	servinginformers "github.com/knative/serving/pkg/client/informers/externalversions"
-	"github.com/n3wscott/autotrigger/pkg/logging"
 	"github.com/n3wscott/autotrigger/pkg/metrics"
 	"github.com/n3wscott/autotrigger/pkg/reconciler"
 	"github.com/n3wscott/autotrigger/pkg/reconciler/v1alpha1/autotrigger"
@@ -94,7 +94,7 @@ func main() {
 
 	configMapWatcher := configmap.NewInformedWatcher(opts.KubeClientSet, system.Namespace())
 	// Watch the logging config map and dynamically update logging levels.
-	configMapWatcher.Watch(logging.ConfigName, logging.UpdateLevelFromConfigMap(logger, atomicLevel, component))
+	configMapWatcher.Watch(reconciler.LoggingConfigName, logging.UpdateLevelFromConfigMap(logger, atomicLevel, component))
 	// Watch the observability config map and dynamically update metrics exporter.
 	configMapWatcher.Watch(metrics.ObservabilityConfigName, metrics.UpdateExporterFromConfigMap(component, logger))
 

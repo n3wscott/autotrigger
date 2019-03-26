@@ -291,20 +291,6 @@
   revision = "dd3ceb3323922b899a0a913f885fcf59943e7b59"
 
 [[projects]]
-  branch = "master"
-  digest = "1:e2022ca038cb368876e9b00b7faae9ef3266d4506b36a6f9b133701dcae730d3"
-  name = "github.com/knative/caching"
-  packages = [
-    "pkg/apis/caching",
-    "pkg/apis/caching/v1alpha1",
-    "pkg/client/clientset/versioned",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/caching/v1alpha1",
-  ]
-  pruneopts = "UT"
-  revision = "3fc06fd3c9880a9ebb5c401f4b20cf6666cc7bc0"
-
-[[projects]]
   digest = "1:1ef97cf8c0d4028129ea1a5a7a50786e53377eef61df8d8e3c34d5a39837f8ad"
   name = "github.com/knative/eventing"
   packages = [
@@ -324,7 +310,7 @@
   revision = "4d7c827969e5d30400d23b9687c0450079c2e11e"
 
 [[projects]]
-  digest = "1:d1ad59220bc0e0b896ce5caa85f5091a8188e58dc10d0f38096adb1a4ef92ba0"
+  digest = "1:bad3fb21989089e11570fd1efe28e12ad582a76bc2efa71a8d1eae84c0ddf38f"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -354,11 +340,11 @@
     "webhook",
   ]
   pruneopts = "UT"
-  revision = "d4b8b65b25fb5bc7e4782c8198d25ed5fc4203ea"
+  revision = "924634750b72458920be140517ca4ab26cbc847e"
   source = "github.com/n3wscott/pkg"
 
 [[projects]]
-  digest = "1:8d86dd61587e1648efb8bf2fa6b98ce48a1d653bc6cd40a97f1c32bd681c610f"
+  digest = "1:91c505116ac44bbf5b96c99516fa96f089a846c950aca91dcc232d4c8da3ef7b"
   name = "github.com/knative/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -383,7 +369,6 @@
     "pkg/client/listers/autoscaling/v1alpha1",
     "pkg/client/listers/networking/v1alpha1",
     "pkg/client/listers/serving/v1alpha1",
-    "pkg/utils",
   ]
   pruneopts = "UT"
   revision = "99774a5af4c7b688998ed05ec2c1e1f4e97eef70"
@@ -1031,18 +1016,15 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/knative/caching/pkg/client/clientset/versioned",
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/client/clientset/versioned",
     "github.com/knative/eventing/pkg/client/informers/externalversions",
     "github.com/knative/eventing/pkg/client/informers/externalversions/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/client/listers/eventing/v1alpha1",
-    "github.com/knative/pkg/client/clientset/versioned",
     "github.com/knative/pkg/configmap",
     "github.com/knative/pkg/controller",
     "github.com/knative/pkg/kmeta",
     "github.com/knative/pkg/logging",
-    "github.com/knative/pkg/logging/logkey",
     "github.com/knative/pkg/metrics",
     "github.com/knative/pkg/signals",
     "github.com/knative/pkg/system",
@@ -1052,7 +1034,6 @@
     "github.com/knative/serving/pkg/client/informers/externalversions",
     "github.com/knative/serving/pkg/client/informers/externalversions/serving/v1alpha1",
     "github.com/knative/serving/pkg/client/listers/serving/v1alpha1",
-    "github.com/knative/serving/pkg/utils",
     "go.opencensus.io/stats",
     "go.opencensus.io/stats/view",
     "go.opencensus.io/tag",
@@ -1062,16 +1043,10 @@
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/labels",
-    "k8s.io/apimachinery/pkg/watch",
-    "k8s.io/client-go/dynamic",
-    "k8s.io/client-go/kubernetes",
-    "k8s.io/client-go/kubernetes/scheme",
-    "k8s.io/client-go/kubernetes/typed/core/v1",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
-    "k8s.io/client-go/tools/record",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

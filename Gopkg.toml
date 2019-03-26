@@ -6,7 +6,7 @@
   name = "github.com/knative/pkg"
   # HEAD as of 2019-03-21
   source = "github.com/n3wscott/pkg"
-  revision = "d4b8b65b25fb5bc7e4782c8198d25ed5fc4203ea"
+  revision = "924634750b72458920be140517ca4ab26cbc847e"
 
 [[constraint]]
   name = "github.com/knative/serving"
