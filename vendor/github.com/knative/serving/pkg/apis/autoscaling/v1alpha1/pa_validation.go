@@ -20,52 +20,36 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/knative/pkg/apis"
-	"github.com/knative/pkg/kmp"
+	"knative.dev/pkg/apis"
 	"github.com/knative/serving/pkg/apis/autoscaling"
-	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	"github.com/knative/serving/pkg/apis/serving"
 	"k8s.io/apimachinery/pkg/api/equality"
 )
 
 func (pa *PodAutoscaler) Validate(ctx context.Context) *apis.FieldError {
-	return servingv1alpha1.ValidateObjectMetadata(pa.GetObjectMeta()).
-		ViaField("metadata").
-		Also(pa.Spec.Validate(ctx).ViaField("spec")).
-		Also(pa.validateMetric())
+	errs := serving.ValidateObjectMetadata(pa.GetObjectMeta()).ViaField("metadata")
+	errs = errs.Also(pa.validateMetric())
+	return errs.Also(pa.Spec.Validate(apis.WithinSpec(ctx)).ViaField("spec"))
 }
 
+// Validate validates PodAutoscaler Spec.
 func (rs *PodAutoscalerSpec) Validate(ctx context.Context) *apis.FieldError {
 	if equality.Semantic.DeepEqual(rs, &PodAutoscalerSpec{}) {
 		return apis.ErrMissingField(apis.CurrentField)
 	}
-	errs := validateReference(rs.ScaleTargetRef).ViaField("scaleTargetRef")
-	if rs.ServiceName == "" {
-		errs = errs.Also(apis.ErrMissingField("serviceName"))
-	}
-	if err := rs.ConcurrencyModel.Validate(ctx); err != nil {
-		errs = errs.Also(err.ViaField("concurrencyModel"))
-	} else if err := servingv1alpha1.ValidateContainerConcurrency(rs.ContainerConcurrency, rs.ConcurrencyModel); err != nil {
-		errs = errs.Also(err)
-	}
-	return errs
+	errs := serving.ValidateNamespacedObjectReference(&rs.ScaleTargetRef).ViaField("scaleTargetRef")
+	errs = errs.Also(rs.ContainerConcurrency.Validate(ctx).
+		ViaField("containerConcurrency"))
+	return errs.Also(validateSKSFields(ctx, rs))
 }
 
-func validateReference(ref autoscalingv1.CrossVersionObjectReference) *apis.FieldError {
-	if equality.Semantic.DeepEqual(ref, autoscalingv1.CrossVersionObjectReference{}) {
-		return apis.ErrMissingField(apis.CurrentField)
+func validateSKSFields(ctx context.Context, rs *PodAutoscalerSpec) *apis.FieldError {
+	var all *apis.FieldError
+	// TODO(vagababov) stop permitting empty protocol type, once SKS controller is live.
+	if string(rs.ProtocolType) != "" {
+		all = all.Also(rs.ProtocolType.Validate(ctx)).ViaField("protocolType")
 	}
-	var errs *apis.FieldError
-	if ref.Kind == "" {
-		errs = errs.Also(apis.ErrMissingField("kind"))
-	}
-	if ref.Name == "" {
-		errs = errs.Also(apis.ErrMissingField("name"))
-	}
-	if ref.APIVersion == "" {
-		errs = errs.Also(apis.ErrMissingField("apiVersion"))
-	}
-	return errs
+	return all
 }
 
 func (pa *PodAutoscaler) validateMetric() *apis.FieldError {
@@ -78,7 +62,7 @@ func (pa *PodAutoscaler) validateMetric() *apis.FieldError {
 			}
 		case autoscaling.HPA:
 			switch metric {
-			case autoscaling.CPU:
+			case autoscaling.CPU, autoscaling.Concurrency:
 				return nil
 			}
 			// TODO: implement OPS autoscaling.
@@ -90,38 +74,6 @@ func (pa *PodAutoscaler) validateMetric() *apis.FieldError {
 			Message: fmt.Sprintf("Unsupported metric %q for PodAutoscaler class %q",
 				metric, pa.Class()),
 			Paths: []string{"annotations[autoscaling.knative.dev/metric]"},
-		}
-	}
-	return nil
-}
-
-func (current *PodAutoscaler) CheckImmutableFields(ctx context.Context, og apis.Immutable) *apis.FieldError {
-	original, ok := og.(*PodAutoscaler)
-	if !ok {
-		return &apis.FieldError{Message: "The provided original was not a PodAutoscaler"}
-	}
-
-	if diff, err := kmp.SafeDiff(original.Spec, current.Spec); err != nil {
-		return &apis.FieldError{
-			Message: "Failed to diff PodAutoscaler",
-			Paths:   []string{"spec"},
-			Details: err.Error(),
-		}
-	} else if diff != "" {
-		return &apis.FieldError{
-			Message: "Immutable fields changed (-old +new)",
-			Paths:   []string{"spec"},
-			Details: diff,
-		}
-	}
-	// Verify the PA class does not change.
-	// For backward compatibility, we allow a new class where there was none before.
-	if oldClass, ok := original.Annotations[autoscaling.ClassAnnotationKey]; ok {
-		if newClass, ok := current.Annotations[autoscaling.ClassAnnotationKey]; !ok || oldClass != newClass {
-			return &apis.FieldError{
-				Message: fmt.Sprintf("Immutable class annotation changed (-%q +%q)", oldClass, newClass),
-				Paths:   []string{"annotations[autoscaling.knative.dev/class]"},
-			}
 		}
 	}
 	return nil

@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ import (
 	versioned "github.com/knative/eventing/pkg/client/clientset/versioned"
 	eventing "github.com/knative/eventing/pkg/client/informers/externalversions/eventing"
 	internalinterfaces "github.com/knative/eventing/pkg/client/informers/externalversions/internalinterfaces"
+	messaging "github.com/knative/eventing/pkg/client/informers/externalversions/messaging"
+	sources "github.com/knative/eventing/pkg/client/informers/externalversions/sources"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -173,8 +175,18 @@ type SharedInformerFactory interface {
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
 	Eventing() eventing.Interface
+	Messaging() messaging.Interface
+	Sources() sources.Interface
 }
 
 func (f *sharedInformerFactory) Eventing() eventing.Interface {
 	return eventing.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Messaging() messaging.Interface {
+	return messaging.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Sources() sources.Interface {
+	return sources.New(f, f.namespace, f.tweakListOptions)
 }

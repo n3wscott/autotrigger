@@ -19,9 +19,9 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/knative/pkg/apis"
-	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
-	"github.com/knative/pkg/kmeta"
+	"knative.dev/pkg/apis"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/kmeta"
 )
 
 // +genclient
@@ -55,6 +55,9 @@ var (
 	_ apis.Validatable = (*Service)(nil)
 	_ apis.Defaultable = (*Service)(nil)
 
+	// Check that Route can be converted to higher versions.
+	_ apis.Convertible = (*Service)(nil)
+
 	// Check that we can create OwnerReferences to a Service.
 	_ kmeta.OwnerRefable = (*Service)(nil)
 )
@@ -75,32 +78,40 @@ type ServiceSpec struct {
 	// +optional
 	DeprecatedGeneration int64 `json:"generation,omitempty"`
 
-	// RunLatest defines a simple Service. It will automatically
+	// DeprecatedRunLatest defines a simple Service. It will automatically
 	// configure a route that keeps the latest ready revision
 	// from the supplied configuration running.
 	// +optional
-	RunLatest *RunLatestType `json:"runLatest,omitempty"`
+	DeprecatedRunLatest *RunLatestType `json:"runLatest,omitempty"`
 
 	// DeprecatedPinned is DEPRECATED in favor of ReleaseType
 	// +optional
 	DeprecatedPinned *PinnedType `json:"pinned,omitempty"`
 
-	// Manual mode enables users to start managing the underlying Route and Configuration
+	// DeprecatedManual mode enables users to start managing the underlying Route and Configuration
 	// resources directly.  This advanced usage is intended as a path for users to graduate
 	// from the limited capabilities of Service to the full power of Route.
 	// +optional
-	Manual *ManualType `json:"manual,omitempty"`
+	DeprecatedManual *ManualType `json:"manual,omitempty"`
 
 	// Release enables gradual promotion of new revisions by allowing traffic
 	// to be split between two revisions. This type replaces the deprecated Pinned type.
 	// +optional
-	Release *ReleaseType `json:"release,omitempty"`
+	DeprecatedRelease *ReleaseType `json:"release,omitempty"`
+
+	// We are moving to a shape where the Configuration and Route specifications
+	// are inlined into the Service, which gives them compatible shapes.  We are
+	// staging this change here as a path to this in v1beta1, which drops the
+	// "mode" based specifications above.  Ultimately all non-v1beta1 fields will
+	// be deprecated, and then dropped in v1beta1.
+	ConfigurationSpec `json:",inline"`
+	RouteSpec         `json:",inline"`
 }
 
 // ManualType contains the options for configuring a manual service. See ServiceSpec for
 // more details.
 type ManualType struct {
-	// Manual type does not contain a configuration as this type provides the
+	// DeprecatedManual type does not contain a configuration as this type provides the
 	// user complete control over the configuration and route.
 }
 
@@ -154,56 +165,22 @@ type PinnedType struct {
 const (
 	// ServiceConditionReady is set when the service is configured
 	// and has available backends ready to receive traffic.
-	ServiceConditionReady = duckv1alpha1.ConditionReady
+	ServiceConditionReady = apis.ConditionReady
 	// ServiceConditionRoutesReady is set when the service's underlying
 	// routes have reported readiness.
-	ServiceConditionRoutesReady duckv1alpha1.ConditionType = "RoutesReady"
+	ServiceConditionRoutesReady apis.ConditionType = "RoutesReady"
 	// ServiceConditionConfigurationsReady is set when the service's underlying
 	// configurations have reported readiness.
-	ServiceConditionConfigurationsReady duckv1alpha1.ConditionType = "ConfigurationsReady"
+	ServiceConditionConfigurationsReady apis.ConditionType = "ConfigurationsReady"
 )
 
 // ServiceStatus represents the Status stanza of the Service resource.
 type ServiceStatus struct {
-	duckv1alpha1.Status `json:",inline"`
+	duckv1beta1.Status `json:",inline"`
 
-	// From RouteStatus.
-	// Domain holds the top-level domain that will distribute traffic over the provided targets.
-	// It generally has the form {route-name}.{route-namespace}.{cluster-level-suffix}
-	// +optional
-	Domain string `json:"domain,omitempty"`
+	RouteStatusFields `json:",inline"`
 
-	// From RouteStatus.
-	// DeprecatedDomainInternal holds the top-level domain that will distribute traffic over the provided
-	// targets from inside the cluster. It generally has the form
-	// {route-name}.{route-namespace}.svc.{cluster-domain-name}
-	// DEPRECATED: Use Address instead.
-	// +optional
-	DeprecatedDomainInternal string `json:"domainInternal,omitempty"`
-
-	// Address holds the information needed for a Route to be the target of an event.
-	// +optional
-	Address *duckv1alpha1.Addressable `json:"address,omitempty"`
-
-	// From RouteStatus.
-	// Traffic holds the configured traffic distribution.
-	// These entries will always contain RevisionName references.
-	// When ConfigurationName appears in the spec, this will hold the
-	// LatestReadyRevisionName that we last observed.
-	// +optional
-	Traffic []TrafficTarget `json:"traffic,omitempty"`
-
-	// From ConfigurationStatus.
-	// LatestReadyRevisionName holds the name of the latest Revision stamped out
-	// from this Service's Configuration that has had its "Ready" condition become "True".
-	// +optional
-	LatestReadyRevisionName string `json:"latestReadyRevisionName,omitempty"`
-
-	// From ConfigurationStatus.
-	// LatestCreatedRevisionName is the last revision that was created from this Service's
-	// Configuration. It might not be ready yet, for that use LatestReadyRevisionName.
-	// +optional
-	LatestCreatedRevisionName string `json:"latestCreatedRevisionName,omitempty"`
+	ConfigurationStatusFields `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

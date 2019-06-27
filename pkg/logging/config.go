@@ -20,7 +20,7 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/knative/pkg/logging"
+	"knative.dev/pkg/logging"
 )
 
 const (

@@ -17,10 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/knative/pkg/apis"
-	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
-	"github.com/knative/pkg/kmeta"
+	"knative.dev/pkg/apis"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/kmeta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // +genclient
@@ -52,6 +53,9 @@ var (
 	_ apis.Validatable = (*Configuration)(nil)
 	_ apis.Defaultable = (*Configuration)(nil)
 
+	// Check that Configuration can be converted to higher versions.
+	_ apis.Convertible = (*Configuration)(nil)
+
 	// Check that we can create OwnerReferences to a Configuration.
 	_ kmeta.OwnerRefable = (*Configuration)(nil)
 )
@@ -72,26 +76,32 @@ type ConfigurationSpec struct {
 	// Build optionally holds the specification for the build to
 	// perform to produce the Revision's container image.
 	// +optional
-	Build *RawExtension `json:"build,omitempty"`
+	DeprecatedBuild *runtime.RawExtension `json:"build,omitempty"`
 
-	// RevisionTemplate holds the latest specification for the Revision to
+	// DeprecatedRevisionTemplate holds the latest specification for the Revision to
 	// be stamped out. If a Build specification is provided, then the
-	// RevisionTemplate's BuildName field will be populated with the name of
+	// DeprecatedRevisionTemplate's BuildName field will be populated with the name of
 	// the Build object created to produce the container for the Revision.
+	// DEPRECATED Use Template instead.
 	// +optional
-	RevisionTemplate RevisionTemplateSpec `json:"revisionTemplate"`
+	DeprecatedRevisionTemplate *RevisionTemplateSpec `json:"revisionTemplate,omitempty"`
+
+	// Template holds the latest specification for the Revision to
+	// be stamped out.
+	// +optional
+	Template *RevisionTemplateSpec `json:"template,omitempty"`
 }
 
 const (
 	// ConfigurationConditionReady is set when the configuration's latest
 	// underlying revision has reported readiness.
-	ConfigurationConditionReady = duckv1alpha1.ConditionReady
+	ConfigurationConditionReady = apis.ConditionReady
 )
 
-// ConfigurationStatus communicates the observed state of the Configuration (from the controller).
-type ConfigurationStatus struct {
-	duckv1alpha1.Status `json:",inline"`
-
+// ConfigurationStatusFields holds all of the non-duckv1beta1.Status status fields of a Route.
+// These are defined outline so that we can also inline them into Service, and more easily
+// copy them.
+type ConfigurationStatusFields struct {
 	// LatestReadyRevisionName holds the name of the latest Revision stamped out
 	// from this Configuration that has had its "Ready" condition become "True".
 	// +optional
@@ -101,6 +111,13 @@ type ConfigurationStatus struct {
 	// Configuration. It might not be ready yet, for that use LatestReadyRevisionName.
 	// +optional
 	LatestCreatedRevisionName string `json:"latestCreatedRevisionName,omitempty"`
+}
+
+// ConfigurationStatus communicates the observed state of the Configuration (from the controller).
+type ConfigurationStatus struct {
+	duckv1beta1.Status `json:",inline"`
+
+	ConfigurationStatusFields `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

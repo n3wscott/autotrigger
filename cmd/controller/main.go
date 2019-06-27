@@ -17,91 +17,15 @@ limitations under the License.
 package main
 
 import (
-	"flag"
-	eventinginformers "github.com/knative/eventing/pkg/client/informers/externalversions"
-	"github.com/knative/pkg/controller"
-	"github.com/knative/pkg/logging"
-	"github.com/knative/pkg/signals"
-	"github.com/knative/pkg/system"
-	servinginformers "github.com/knative/serving/pkg/client/informers/externalversions"
-	"github.com/n3wscott/autotrigger/pkg/metrics"
-	"github.com/n3wscott/autotrigger/pkg/reconciler"
-	"github.com/n3wscott/autotrigger/pkg/reconciler/v1alpha1/autotrigger"
-	"go.uber.org/zap"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"log"
-	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-)
+	// The set of controllers this controller process runs.
+	"github.com/n3wscott/autotrigger/pkg/reconciler/autotrigger"
 
-const (
-	component = "autotriggercontroller"
-)
-
-var (
-	masterURL  = flag.String("master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
-	kubeconfig = flag.String("kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
+	// This defines the shared main for injected controllers.
+	"knative.dev/pkg/injection/sharedmain"
 )
 
 func main() {
-	flag.Parse()
-
-	cmCfg := controller.ConfigMapConfig{
-		LoggingConfigPath: "/etc/config-logging",
-		LoggingConfigName: logging.ConfigName,
-		LoggingObserver:   logging.NewObserverLoggingDecorator(component),
-
-		MetricsConfigName: metrics.ObservabilityConfigName,
-		MetricsObserver:   metrics.NewObserverLoggingDecorator(component),
-	}
-
-	cfg, err := clientcmd.BuildConfigFromFlags(*masterURL, *kubeconfig)
-	if err != nil {
-		log.Fatalf("Error building kubeconfig %v", zap.Error(err))
-	}
-
-	// We run 6 controllers, so bump the defaults.
-	cfg.QPS = 6 * rest.DefaultQPS
-	cfg.Burst = 6 * rest.DefaultBurst
-
-	opts := reconciler.NewOptions(component, cfg, cmCfg)
-
-	servingInformerFactory := servinginformers.NewSharedInformerFactory(opts.ServingClientSet, opts.ResyncPeriod)
-
-	eventingInformerFactory := eventinginformers.NewSharedInformerFactory(opts.EventingClientSet, opts.ResyncPeriod)
-
-	serviceInformer := servingInformerFactory.Serving().V1alpha1().Services()
-
-	triggerInformer := eventingInformerFactory.Eventing().V1alpha1().Triggers()
-
-	// Build all of our controllers, with the clients constructed above.
-	// Add new controllers to this array.
-	controllers := []*controller.Impl{
-		autotrigger.NewController(
-			opts,
-			serviceInformer,
-			triggerInformer,
-		),
-	}
-
-	configMapWatcher := configmap.NewInformedWatcher(opts.KubeClientSet, system.Namespace())
-	// Watch the logging config map and dynamically update logging levels.
-	configMapWatcher.Watch(reconciler.LoggingConfigName, logging.UpdateLevelFromConfigMap(logger, atomicLevel, component))
-	// Watch the observability config map and dynamically update metrics exporter.
-	configMapWatcher.Watch(metrics.ObservabilityConfigName, metrics.UpdateExporterFromConfigMap(component, logger))
-
-	if err := controller.StartInformers(stopCh, serviceInformer.Informer(), triggerInformer.Informer()); err != nil {
-		logger.Fatalw("failed to start informers", zap.Error(err))
-	}
-
-	if err := opts.ConfigMapWatcher.Start(opts.StopChannel); err != nil {
-		opts.Logger.Fatalw("failed to start configuration manager", zap.Error(err))
-	}
-
-	// Start all of the controllers.
-	opts.Logger.Info("Starting....")
-	controller.StartAll(opts.StopChannel, controllers...)
-
-	<-opts.StopChannel
+	sharedmain.Main("controller",
+		autotrigger.NewController,
+	)
 }

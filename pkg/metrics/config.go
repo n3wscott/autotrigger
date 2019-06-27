@@ -17,9 +17,9 @@ limitations under the License.
 package metrics
 
 import (
-	"github.com/knative/pkg/metrics"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	"knative.dev/pkg/metrics"
 )
 
 const (

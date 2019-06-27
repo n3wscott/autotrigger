@@ -19,14 +19,14 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-
-	"github.com/knative/pkg/apis"
-	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
-	"github.com/knative/pkg/webhook"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/pkg/apis"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/webhook"
 )
 
 // +genclient
-// +genclient:noStatus
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -45,11 +45,16 @@ type ClusterChannelProvisioner struct {
 	Status ClusterChannelProvisionerStatus `json:"status,omitempty"`
 }
 
-// Check that ClusterChannelProvisioner can be validated and can be defaulted.
-var _ apis.Validatable = (*ClusterChannelProvisioner)(nil)
-var _ apis.Defaultable = (*ClusterChannelProvisioner)(nil)
-var _ runtime.Object = (*ClusterChannelProvisioner)(nil)
-var _ webhook.GenericCRD = (*ClusterChannelProvisioner)(nil)
+var (
+	// Check that ClusterChannelProvisioner can be validated and can be defaulted.
+	_ apis.Validatable   = (*ClusterChannelProvisioner)(nil)
+	_ apis.Defaultable   = (*ClusterChannelProvisioner)(nil)
+	_ runtime.Object     = (*ClusterChannelProvisioner)(nil)
+	_ webhook.GenericCRD = (*ClusterChannelProvisioner)(nil)
+
+	// Check that we can create OwnerReferences to a ClusterChannelProvisioner.
+	_ kmeta.OwnerRefable = (*ClusterChannelProvisioner)(nil)
+)
 
 // ClusterChannelProvisionerSpec is the spec for a ClusterChannelProvisioner resource.
 type ClusterChannelProvisionerSpec struct {
@@ -63,30 +68,24 @@ type ClusterChannelProvisionerSpec struct {
 	DeprecatedGeneration int64 `json:"generation,omitempty"`
 }
 
-var ccProvCondSet = duckv1alpha1.NewLivingConditionSet()
+var ccProvCondSet = apis.NewLivingConditionSet()
 
 // ClusterChannelProvisionerStatus is the status for a ClusterChannelProvisioner resource
 type ClusterChannelProvisionerStatus struct {
-	// Conditions holds the state of a cluster provisioner at a point in time.
-	// +optional
-	// +patchMergeKey=type
-	// +patchStrategy=merge
-	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
-
-	// ObservedGeneration is the 'Generation' of the ClusterChannelProvisioner that
-	// was last reconciled by the controller.
-	// +optional
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+	// inherits duck/v1beta1 Status, which currently provides:
+	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
+	// * Conditions - the latest available observations of a resource's current state.
+	duckv1beta1.Status `json:",inline"`
 }
 
 const (
 	// ClusterChannelProvisionerConditionReady has status True when the Controller reconciling objects
 	// controlled by it is ready to control them.
-	ClusterChannelProvisionerConditionReady = duckv1alpha1.ConditionReady
+	ClusterChannelProvisionerConditionReady = apis.ConditionReady
 )
 
 // GetCondition returns the condition currently associated with the given type, or nil.
-func (ps *ClusterChannelProvisionerStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
+func (ps *ClusterChannelProvisionerStatus) GetCondition(t apis.ConditionType) *apis.Condition {
 	return ccProvCondSet.Manage(ps).GetCondition(t)
 }
 
@@ -121,4 +120,9 @@ type ClusterChannelProvisionerList struct {
 	metav1.ListMeta `json:"metadata"`
 
 	Items []ClusterChannelProvisioner `json:"items"`
+}
+
+// GetGroupVersionKind return GroupVersionKind for ClusterChannelProvisioner
+func (ccp *ClusterChannelProvisioner) GetGroupVersionKind() schema.GroupVersionKind {
+	return SchemeGroupVersion.WithKind("ClusterChannelProvisioner")
 }
