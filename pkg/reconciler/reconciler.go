@@ -45,21 +45,21 @@ type Options struct {
 	StatsReporter StatsReporter
 }
 
-func NewOptions(ctx context.Context, cfg *rest.Config, stopCh <-chan struct{}) Options {
-	logger := logging.FromContext(ctx)
+func NewOptions(component string, cfg *rest.Config, cmCfg controller.ConfigMapConfig) Options {
+	base := controller.NewOptions(component, cfg, cmCfg)
 
 	servingClient, err := servingclientset.NewForConfig(cfg)
 	if err != nil {
-		logger.Fatalw("Error building serving clientset", zap.Error(err))
+		base.Logger.Fatalw("Error building serving clientset", zap.Error(err))
 	}
 
 	eventingClient, err := eventingclientset.NewForConfig(cfg)
 	if err != nil {
-		logger.Fatalw("Error building eventing clientset", zap.Error(err))
+		base.Logger.Fatalw("Error building eventing clientset", zap.Error(err))
 	}
 
 	opts := Options{
-		Options:           controller.NewOptions(ctx, cfg, stopCh),
+		Options:           base,
 		ServingClientSet:  servingClient,
 		EventingClientSet: eventingClient,
 	}

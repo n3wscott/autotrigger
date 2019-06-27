@@ -17,10 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"flag"
 	eventinginformers "github.com/knative/eventing/pkg/client/informers/externalversions"
-	"github.com/knative/pkg/configmap"
 	"github.com/knative/pkg/controller"
 	"github.com/knative/pkg/logging"
 	"github.com/knative/pkg/signals"
@@ -38,8 +36,7 @@ import (
 )
 
 const (
-	threadsPerController = 2
-	component            = "autotriggercontroller"
+	component = "autotriggercontroller"
 )
 
 var (
@@ -49,30 +46,26 @@ var (
 
 func main() {
 	flag.Parse()
-	loggingConfigMap, err := configmap.Load("/etc/config-logging")
-	if err != nil {
-		log.Fatalf("Error loading logging configuration: %v", err)
-	}
-	loggingConfig, err := logging.NewConfigFromMap(loggingConfigMap)
-	if err != nil {
-		log.Fatalf("Error parsing logging configuration: %v", err)
-	}
-	logger, atomicLevel := logging.NewLoggerFromConfig(loggingConfig, component)
-	defer logger.Sync()
 
-	// set up signals so we handle the first shutdown signal gracefully
-	stopCh := signals.SetupSignalHandler()
+	cmCfg := controller.ConfigMapConfig{
+		LoggingConfigPath: "/etc/config-logging",
+		LoggingConfigName: logging.ConfigName,
+		LoggingObserver:   logging.NewObserverLoggingDecorator(component),
+
+		MetricsConfigName: metrics.ObservabilityConfigName,
+		MetricsObserver:   metrics.NewObserverLoggingDecorator(component),
+	}
 
 	cfg, err := clientcmd.BuildConfigFromFlags(*masterURL, *kubeconfig)
 	if err != nil {
-		logger.Fatalw("Error building kubeconfig", zap.Error(err))
+		log.Fatalf("Error building kubeconfig %v", zap.Error(err))
 	}
 
 	// We run 6 controllers, so bump the defaults.
 	cfg.QPS = 6 * rest.DefaultQPS
 	cfg.Burst = 6 * rest.DefaultBurst
 
-	opts := reconciler.NewOptions(context.Background(), cfg, stopCh)
+	opts := reconciler.NewOptions(component, cfg, cmCfg)
 
 	servingInformerFactory := servinginformers.NewSharedInformerFactory(opts.ServingClientSet, opts.ResyncPeriod)
 
@@ -102,13 +95,13 @@ func main() {
 		logger.Fatalw("failed to start informers", zap.Error(err))
 	}
 
-	if err := configMapWatcher.Start(stopCh); err != nil {
-		logger.Fatalw("failed to start configuration manager", zap.Error(err))
+	if err := opts.ConfigMapWatcher.Start(opts.StopChannel); err != nil {
+		opts.Logger.Fatalw("failed to start configuration manager", zap.Error(err))
 	}
 
 	// Start all of the controllers.
-	logger.Info("Starting....")
-	controller.StartAll(stopCh, controllers...)
+	opts.Logger.Info("Starting....")
+	controller.StartAll(opts.StopChannel, controllers...)
 
-	<-stopCh
+	<-opts.StopChannel
 }
