@@ -54,6 +54,12 @@ func NewConfigFromConfigMap(configMap *corev1.ConfigMap) (*logging.Config, error
 	return logging.NewConfigFromConfigMap(configMap, components...)
 }
 
+// UpdateLogLevelFromConfigMap returns a helper func that can be used to update the exporter
+// when a config map is updated
+func NewObserverLoggingDecorator(levelKey string, components ...string) logging.ObserverDecorator {
+	return logging.NewObserverLoggingDecorator(levelKey, components...)
+}
+
 // UpdateLevelFromConfigMap returns a helper func that can be used to update the logging level
 // when a config map is updated
 func UpdateLevelFromConfigMap(logger *zap.SugaredLogger, atomicLevel zap.AtomicLevel, levelKey string) func(configMap *corev1.ConfigMap) {
