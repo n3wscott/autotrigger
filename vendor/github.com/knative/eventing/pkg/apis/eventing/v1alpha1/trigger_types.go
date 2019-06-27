@@ -17,16 +17,20 @@
 package v1alpha1
 
 import (
-	"github.com/knative/pkg/apis"
-	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
-	"github.com/knative/pkg/webhook"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/pkg/apis"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/webhook"
 )
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// Trigger represents a request to have events delivered to a consumer from a
+// Broker's event pool.
 type Trigger struct {
 	metav1.TypeMeta `json:",inline"`
 	// +optional
@@ -41,23 +45,19 @@ type Trigger struct {
 	Status TriggerStatus `json:"status,omitempty"`
 }
 
-// Check that Trigger can be validated, can be defaulted, and has immutable fields.
-var _ apis.Validatable = (*Trigger)(nil)
-var _ apis.Defaultable = (*Trigger)(nil)
-var _ apis.Immutable = (*Trigger)(nil)
-var _ runtime.Object = (*Trigger)(nil)
-var _ webhook.GenericCRD = (*Trigger)(nil)
+var (
+	// Check that Trigger can be validated, can be defaulted, and has immutable fields.
+	_ apis.Validatable   = (*Trigger)(nil)
+	_ apis.Defaultable   = (*Trigger)(nil)
+	_ apis.Immutable     = (*Trigger)(nil)
+	_ runtime.Object     = (*Trigger)(nil)
+	_ webhook.GenericCRD = (*Trigger)(nil)
+
+	// Check that we can create OwnerReferences to a Trigger.
+	_ kmeta.OwnerRefable = (*Trigger)(nil)
+)
 
 type TriggerSpec struct {
-	// TODO By enabling the status subresource metadata.generation should increment
-	// thus making this property obsolete.
-	//
-	// We should be able to drop this property with a CRD conversion webhook
-	// in the future
-	//
-	// +optional
-	DeprecatedGeneration int64 `json:"generation,omitempty"`
-
 	// Broker is the broker that this trigger receives events from. If not specified, will default
 	// to 'default'.
 	Broker string `json:"broker,omitempty"`
@@ -85,71 +85,15 @@ type TriggerFilterSourceAndType struct {
 	Source string `json:"source,omitempty"`
 }
 
-var triggerCondSet = duckv1alpha1.NewLivingConditionSet(TriggerConditionBrokerExists, TriggerConditionKubernetesService, TriggerConditionVirtualService, TriggerConditionSubscribed)
-
 // TriggerStatus represents the current state of a Trigger.
 type TriggerStatus struct {
-	// inherits duck/v1alpha1 Status, which currently provides:
+	// inherits duck/v1beta1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
-	duckv1alpha1.Status `json:",inline"`
+	duckv1beta1.Status `json:",inline"`
 
 	// SubscriberURI is the resolved URI of the receiver for this Trigger.
 	SubscriberURI string `json:"subscriberURI,omitempty"`
-}
-
-const (
-	TriggerConditionReady = duckv1alpha1.ConditionReady
-
-	TriggerConditionBrokerExists duckv1alpha1.ConditionType = "BrokerExists"
-
-	TriggerConditionKubernetesService duckv1alpha1.ConditionType = "KubernetesServiceReady"
-
-	TriggerConditionVirtualService duckv1alpha1.ConditionType = "VirtualServiceReady"
-
-	TriggerConditionSubscribed duckv1alpha1.ConditionType = "Subscribed"
-
-	// Constant to represent that we should allow anything.
-	TriggerAnyFilter = "Any"
-)
-
-// GetCondition returns the condition currently associated with the given type, or nil.
-func (ts *TriggerStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
-	return triggerCondSet.Manage(ts).GetCondition(t)
-}
-
-// IsReady returns true if the resource is ready overall.
-func (ts *TriggerStatus) IsReady() bool {
-	return triggerCondSet.Manage(ts).IsHappy()
-}
-
-// InitializeConditions sets relevant unset conditions to Unknown state.
-func (ts *TriggerStatus) InitializeConditions() {
-	triggerCondSet.Manage(ts).InitializeConditions()
-}
-
-func (ts *TriggerStatus) MarkBrokerExists() {
-	triggerCondSet.Manage(ts).MarkTrue(TriggerConditionBrokerExists)
-}
-
-func (ts *TriggerStatus) MarkBrokerDoesNotExist() {
-	triggerCondSet.Manage(ts).MarkFalse(TriggerConditionBrokerExists, "doesNotExist", "Broker does not exist")
-}
-
-func (ts *TriggerStatus) MarkKubernetesServiceExists() {
-	triggerCondSet.Manage(ts).MarkTrue(TriggerConditionKubernetesService)
-}
-
-func (ts *TriggerStatus) MarkVirtualServiceExists() {
-	triggerCondSet.Manage(ts).MarkTrue(TriggerConditionVirtualService)
-}
-
-func (ts *TriggerStatus) MarkSubscribed() {
-	triggerCondSet.Manage(ts).MarkTrue(TriggerConditionSubscribed)
-}
-
-func (ts *TriggerStatus) MarkNotSubscribed(reason, messageFormat string, messageA ...interface{}) {
-	triggerCondSet.Manage(ts).MarkFalse(TriggerConditionSubscribed, reason, messageFormat, messageA...)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -160,4 +104,14 @@ type TriggerList struct {
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Trigger `json:"items"`
+}
+
+// GetGroupVersionKind returns GroupVersionKind for Triggers
+func (t *Trigger) GetGroupVersionKind() schema.GroupVersionKind {
+	return SchemeGroupVersion.WithKind("Trigger")
+}
+
+// GetSpec returns the spec of the Trigger.
+func (t *Trigger) GetSpec() interface{} {
+	return t.Spec
 }

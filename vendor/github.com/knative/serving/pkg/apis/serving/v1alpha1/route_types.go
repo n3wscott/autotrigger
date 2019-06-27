@@ -19,9 +19,12 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/knative/pkg/apis"
-	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
-	"github.com/knative/pkg/kmeta"
+	"knative.dev/pkg/apis"
+	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/kmeta"
+
+	"github.com/knative/serving/pkg/apis/serving/v1beta1"
 )
 
 // +genclient
@@ -53,6 +56,9 @@ var (
 	_ apis.Validatable = (*Route)(nil)
 	_ apis.Defaultable = (*Route)(nil)
 
+	// Check that Route can be converted to higher versions.
+	_ apis.Convertible = (*Route)(nil)
+
 	// Check that we can create OwnerReferences to a Route.
 	_ kmeta.OwnerRefable = (*Route)(nil)
 )
@@ -62,25 +68,11 @@ type TrafficTarget struct {
 	// Name is optionally used to expose a dedicated hostname for referencing this
 	// target exclusively. It has the form: {name}.${route.status.domain}
 	// +optional
-	Name string `json:"name,omitempty"`
+	DeprecatedName string `json:"name,omitempty"`
 
-	// RevisionName of a specific revision to which to send this portion of traffic.
-	// This is mutually exclusive with ConfigurationName.
-	// +optional
-	RevisionName string `json:"revisionName,omitempty"`
-
-	// ConfigurationName of a configuration to whose latest revision we will send
-	// this portion of traffic. When the "status.latestReadyRevisionName" of the
-	// referenced configuration changes, we will automatically migrate traffic
-	// from the prior "latest ready" revision to the new one.
-	// This field is never set in Route's status, only its spec.
-	// This is mutually exclusive with RevisionName.
-	// +optional
-	ConfigurationName string `json:"configurationName,omitempty"`
-
-	// Percent specifies percent of the traffic to this Revision or Configuration.
-	// This defaults to zero if unspecified.
-	Percent int `json:"percent"`
+	// We inherit most of our fields by inlining the v1beta1 type.
+	// Ultimately all non-v1beta1 fields will be deprecated.
+	v1beta1.TrafficTarget `json:",inline"`
 }
 
 // RouteSpec holds the desired state of the Route (from the client).
@@ -104,26 +96,35 @@ type RouteSpec struct {
 const (
 	// RouteConditionReady is set when the service is configured
 	// and has available backends ready to receive traffic.
-	RouteConditionReady = duckv1alpha1.ConditionReady
+	RouteConditionReady = apis.ConditionReady
 
 	// RouteConditionAllTrafficAssigned is set to False when the
 	// service is not configured properly or has no available
 	// backends ready to receive traffic.
-	RouteConditionAllTrafficAssigned duckv1alpha1.ConditionType = "AllTrafficAssigned"
+	RouteConditionAllTrafficAssigned apis.ConditionType = "AllTrafficAssigned"
 
 	// RouteConditionIngressReady is set to False when the
 	// ClusterIngress fails to become Ready.
-	RouteConditionIngressReady duckv1alpha1.ConditionType = "IngressReady"
+	RouteConditionIngressReady apis.ConditionType = "IngressReady"
+
+	// RouteConditionCertificateProvisioned is set to False when the
+	// Knative Certificates fail to be provisioned for the Route.
+	RouteConditionCertificateProvisioned apis.ConditionType = "CertificateProvisioned"
 )
 
-// RouteStatus communicates the observed state of the Route (from the controller).
-type RouteStatus struct {
-	duckv1alpha1.Status `json:",inline"`
+// RouteStatusFields holds all of the non-duckv1beta1.Status status fields of a Route.
+// These are defined outline so that we can also inline them into Service, and more easily
+// copy them.
+type RouteStatusFields struct {
+	// URL holds the url that will distribute traffic over the provided traffic targets.
+	// It generally has the form http[s]://{route-name}.{route-namespace}.{cluster-level-suffix}
+	// +optional
+	URL *apis.URL `json:"url,omitempty"`
 
-	// Domain holds the top-level domain that will distribute traffic over the provided targets.
+	// DeprecatedDomain holds the top-level domain that will distribute traffic over the provided targets.
 	// It generally has the form {route-name}.{route-namespace}.{cluster-level-suffix}
 	// +optional
-	Domain string `json:"domain,omitempty"`
+	DeprecatedDomain string `json:"domain,omitempty"`
 
 	// DeprecatedDomainInternal holds the top-level domain that will distribute traffic over the provided
 	// targets from inside the cluster. It generally has the form
@@ -142,6 +143,13 @@ type RouteStatus struct {
 	// LatestReadyRevisionName that we last observed.
 	// +optional
 	Traffic []TrafficTarget `json:"traffic,omitempty"`
+}
+
+// RouteStatus communicates the observed state of the Route (from the controller).
+type RouteStatus struct {
+	duckv1beta1.Status `json:",inline"`
+
+	RouteStatusFields `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

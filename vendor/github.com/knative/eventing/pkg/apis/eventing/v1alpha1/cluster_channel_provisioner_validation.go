@@ -18,7 +18,8 @@ package v1alpha1
 
 import (
 	"context"
-	"github.com/knative/pkg/apis"
+
+	"knative.dev/pkg/apis"
 )
 
 // Validate validates the ClusterChannelProvisioner resource.

@@ -16,30 +16,48 @@ limitations under the License.
 
 package v1alpha1
 
-import "context"
+import (
+	"context"
 
-const (
-	// defaultTimeoutSeconds will be set if timeoutSeconds not specified.
-	defaultTimeoutSeconds = 5 * 60
+	"knative.dev/pkg/apis"
+	corev1 "k8s.io/api/core/v1"
+
+	"github.com/knative/serving/pkg/apis/serving/v1beta1"
 )
 
 func (r *Revision) SetDefaults(ctx context.Context) {
-	r.Spec.SetDefaults(ctx)
+	r.Spec.SetDefaults(apis.WithinSpec(ctx))
 }
 
 func (rs *RevisionSpec) SetDefaults(ctx context.Context) {
+	if v1beta1.IsUpgradeViaDefaulting(ctx) {
+		beta := v1beta1.RevisionSpec{}
+		if rs.ConvertUp(ctx, &beta) == nil {
+			alpha := RevisionSpec{}
+			if alpha.ConvertDown(ctx, beta) == nil {
+				*rs = alpha
+			}
+		}
+	}
+
 	// When ConcurrencyModel is specified but ContainerConcurrency
 	// is not (0), use the ConcurrencyModel value.
 	if rs.DeprecatedConcurrencyModel == RevisionRequestConcurrencyModelSingle && rs.ContainerConcurrency == 0 {
 		rs.ContainerConcurrency = 1
 	}
 
-	if rs.TimeoutSeconds == 0 {
-		rs.TimeoutSeconds = defaultTimeoutSeconds
+	// When the PodSpec has no containers, move the single Container
+	// into the PodSpec for the scope of defaulting and then move
+	// it back as we return.
+	if len(rs.Containers) == 0 {
+		if rs.DeprecatedContainer == nil {
+			rs.DeprecatedContainer = &corev1.Container{}
+		}
+		rs.Containers = []corev1.Container{*rs.DeprecatedContainer}
+		defer func() {
+			rs.DeprecatedContainer = &rs.Containers[0]
+			rs.Containers = nil
+		}()
 	}
-
-	vms := rs.Container.VolumeMounts
-	for i := range vms {
-		vms[i].ReadOnly = true
-	}
+	rs.RevisionSpec.SetDefaults(ctx)
 }
