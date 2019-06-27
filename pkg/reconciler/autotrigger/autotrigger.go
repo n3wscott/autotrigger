@@ -33,15 +33,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/tracker"
-)
-
-const (
-	// ReconcilerName is the name of the reconciler
-	ReconcilerName = "Autotrigger"
 )
 
 // Reconciler implements controller.Reconciler for Service resources.
@@ -52,10 +45,6 @@ type Reconciler struct {
 	// Eventing
 	eventingClientSet eventingclientset.Interface
 	triggerLister     eventinglisters.TriggerLister
-
-	tracker tracker.Interface
-
-	recorder record.EventRecorder
 }
 
 // Check that our Reconciler implements controller.Reconciler
