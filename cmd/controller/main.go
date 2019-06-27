@@ -20,8 +20,10 @@ import (
 	"flag"
 	eventinginformers "github.com/knative/eventing/pkg/client/informers/externalversions"
 	"github.com/knative/pkg/controller"
+	"github.com/knative/pkg/logging"
+	"github.com/knative/pkg/signals"
+	"github.com/knative/pkg/system"
 	servinginformers "github.com/knative/serving/pkg/client/informers/externalversions"
-	"github.com/n3wscott/autotrigger/pkg/logging"
 	"github.com/n3wscott/autotrigger/pkg/metrics"
 	"github.com/n3wscott/autotrigger/pkg/reconciler"
 	"github.com/n3wscott/autotrigger/pkg/reconciler/v1alpha1/autotrigger"
@@ -83,8 +85,14 @@ func main() {
 		),
 	}
 
-	if err := controller.StartInformers(opts.StopChannel, serviceInformer.Informer(), triggerInformer.Informer()); err != nil {
-		opts.Logger.Fatalw("failed to start informers", zap.Error(err))
+	configMapWatcher := configmap.NewInformedWatcher(opts.KubeClientSet, system.Namespace())
+	// Watch the logging config map and dynamically update logging levels.
+	configMapWatcher.Watch(reconciler.LoggingConfigName, logging.UpdateLevelFromConfigMap(logger, atomicLevel, component))
+	// Watch the observability config map and dynamically update metrics exporter.
+	configMapWatcher.Watch(metrics.ObservabilityConfigName, metrics.UpdateExporterFromConfigMap(component, logger))
+
+	if err := controller.StartInformers(stopCh, serviceInformer.Informer(), triggerInformer.Informer()); err != nil {
+		logger.Fatalw("failed to start informers", zap.Error(err))
 	}
 
 	if err := opts.ConfigMapWatcher.Start(opts.StopChannel); err != nil {

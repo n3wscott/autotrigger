@@ -291,20 +291,6 @@
   revision = "dd3ceb3323922b899a0a913f885fcf59943e7b59"
 
 [[projects]]
-  branch = "master"
-  digest = "1:e2022ca038cb368876e9b00b7faae9ef3266d4506b36a6f9b133701dcae730d3"
-  name = "github.com/knative/caching"
-  packages = [
-    "pkg/apis/caching",
-    "pkg/apis/caching/v1alpha1",
-    "pkg/client/clientset/versioned",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/caching/v1alpha1",
-  ]
-  pruneopts = "UT"
-  revision = "3fc06fd3c9880a9ebb5c401f4b20cf6666cc7bc0"
-
-[[projects]]
   digest = "1:1ef97cf8c0d4028129ea1a5a7a50786e53377eef61df8d8e3c34d5a39837f8ad"
   name = "github.com/knative/eventing"
   packages = [
@@ -324,7 +310,7 @@
   revision = "4d7c827969e5d30400d23b9687c0450079c2e11e"
 
 [[projects]]
-  digest = "1:a9383043e5a24cc6a9b5a5df05b2569f876267e7526b84e0b2b0a9c1f8721808"
+  digest = "1:f6fecf284178f9e9634a2d70ff782d7b0a2c2c5c08af58c2a4da5d2049b53dc2"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -340,7 +326,6 @@
     "client/clientset/versioned/scheme",
     "client/clientset/versioned/typed/authentication/v1alpha1",
     "client/clientset/versioned/typed/istio/v1alpha3",
-    "configmap",
     "controller",
     "kmeta",
     "kmp",
@@ -348,17 +333,18 @@
     "logging/logkey",
     "metrics",
     "metrics/metricskey",
+    "reconciler",
     "signals",
     "system",
     "version",
     "webhook",
   ]
   pruneopts = "UT"
-  revision = "4f565ed3d3205eefcb81f76a38728e3acb4eb462"
+  revision = "3916142a63173292fbf867f610e530bf27fd33bb"
   source = "github.com/n3wscott/pkg"
 
 [[projects]]
-  digest = "1:8d86dd61587e1648efb8bf2fa6b98ce48a1d653bc6cd40a97f1c32bd681c610f"
+  digest = "1:91c505116ac44bbf5b96c99516fa96f089a846c950aca91dcc232d4c8da3ef7b"
   name = "github.com/knative/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -383,7 +369,6 @@
     "pkg/client/listers/autoscaling/v1alpha1",
     "pkg/client/listers/networking/v1alpha1",
     "pkg/client/listers/serving/v1alpha1",
-    "pkg/utils",
   ]
   pruneopts = "UT"
   revision = "99774a5af4c7b688998ed05ec2c1e1f4e97eef70"
@@ -876,55 +861,11 @@
   version = "kubernetes-1.12.6"
 
 [[projects]]
-  digest = "1:02e75164380d72b949e44908f09089b9b95a679d12b8bbcc685d5ef11ab59e4e"
+  digest = "1:7f277e68f43364605e59c263637917e1e19110176f67c06185537c25906387a4"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
     "dynamic",
-    "informers",
-    "informers/admissionregistration",
-    "informers/admissionregistration/v1alpha1",
-    "informers/admissionregistration/v1beta1",
-    "informers/apps",
-    "informers/apps/v1",
-    "informers/apps/v1beta1",
-    "informers/apps/v1beta2",
-    "informers/autoscaling",
-    "informers/autoscaling/v1",
-    "informers/autoscaling/v2beta1",
-    "informers/autoscaling/v2beta2",
-    "informers/batch",
-    "informers/batch/v1",
-    "informers/batch/v1beta1",
-    "informers/batch/v2alpha1",
-    "informers/certificates",
-    "informers/certificates/v1beta1",
-    "informers/coordination",
-    "informers/coordination/v1beta1",
-    "informers/core",
-    "informers/core/v1",
-    "informers/events",
-    "informers/events/v1beta1",
-    "informers/extensions",
-    "informers/extensions/v1beta1",
-    "informers/internalinterfaces",
-    "informers/networking",
-    "informers/networking/v1",
-    "informers/policy",
-    "informers/policy/v1beta1",
-    "informers/rbac",
-    "informers/rbac/v1",
-    "informers/rbac/v1alpha1",
-    "informers/rbac/v1beta1",
-    "informers/scheduling",
-    "informers/scheduling/v1alpha1",
-    "informers/scheduling/v1beta1",
-    "informers/settings",
-    "informers/settings/v1alpha1",
-    "informers/storage",
-    "informers/storage/v1",
-    "informers/storage/v1alpha1",
-    "informers/storage/v1beta1",
     "kubernetes",
     "kubernetes/scheme",
     "kubernetes/typed/admissionregistration/v1alpha1",
@@ -958,33 +899,6 @@
     "kubernetes/typed/storage/v1",
     "kubernetes/typed/storage/v1alpha1",
     "kubernetes/typed/storage/v1beta1",
-    "listers/admissionregistration/v1alpha1",
-    "listers/admissionregistration/v1beta1",
-    "listers/apps/v1",
-    "listers/apps/v1beta1",
-    "listers/apps/v1beta2",
-    "listers/autoscaling/v1",
-    "listers/autoscaling/v2beta1",
-    "listers/autoscaling/v2beta2",
-    "listers/batch/v1",
-    "listers/batch/v1beta1",
-    "listers/batch/v2alpha1",
-    "listers/certificates/v1beta1",
-    "listers/coordination/v1beta1",
-    "listers/core/v1",
-    "listers/events/v1beta1",
-    "listers/extensions/v1beta1",
-    "listers/networking/v1",
-    "listers/policy/v1beta1",
-    "listers/rbac/v1",
-    "listers/rbac/v1alpha1",
-    "listers/rbac/v1beta1",
-    "listers/scheduling/v1alpha1",
-    "listers/scheduling/v1beta1",
-    "listers/settings/v1alpha1",
-    "listers/storage/v1",
-    "listers/storage/v1alpha1",
-    "listers/storage/v1beta1",
     "pkg/apis/clientauthentication",
     "pkg/apis/clientauthentication/v1alpha1",
     "pkg/apis/clientauthentication/v1beta1",
@@ -1031,26 +945,24 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/knative/caching/pkg/client/clientset/versioned",
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/client/clientset/versioned",
     "github.com/knative/eventing/pkg/client/informers/externalversions",
     "github.com/knative/eventing/pkg/client/informers/externalversions/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/client/listers/eventing/v1alpha1",
-    "github.com/knative/pkg/client/clientset/versioned",
-    "github.com/knative/pkg/configmap",
     "github.com/knative/pkg/controller",
     "github.com/knative/pkg/kmeta",
     "github.com/knative/pkg/logging",
-    "github.com/knative/pkg/logging/logkey",
     "github.com/knative/pkg/metrics",
+    "github.com/knative/pkg/reconciler",
+    "github.com/knative/pkg/signals",
+    "github.com/knative/pkg/system",
     "github.com/knative/serving/pkg/apis/serving",
     "github.com/knative/serving/pkg/apis/serving/v1alpha1",
     "github.com/knative/serving/pkg/client/clientset/versioned",
     "github.com/knative/serving/pkg/client/informers/externalversions",
     "github.com/knative/serving/pkg/client/informers/externalversions/serving/v1alpha1",
     "github.com/knative/serving/pkg/client/listers/serving/v1alpha1",
-    "github.com/knative/serving/pkg/utils",
     "go.opencensus.io/stats",
     "go.opencensus.io/stats/view",
     "go.opencensus.io/tag",
@@ -1060,16 +972,10 @@
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/labels",
-    "k8s.io/apimachinery/pkg/watch",
-    "k8s.io/client-go/dynamic",
-    "k8s.io/client-go/kubernetes",
-    "k8s.io/client-go/kubernetes/scheme",
-    "k8s.io/client-go/kubernetes/typed/core/v1",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
-    "k8s.io/client-go/tools/record",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
