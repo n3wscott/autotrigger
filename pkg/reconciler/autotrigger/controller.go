@@ -2,6 +2,7 @@ package autotrigger
 
 import (
 	"context"
+	"knative.dev/pkg/apis/duck"
 
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"k8s.io/client-go/tools/cache"
@@ -12,6 +13,7 @@ import (
 	eventingclient "github.com/knative/eventing/pkg/client/injection/client"
 	"github.com/knative/eventing/pkg/client/injection/informers/eventing/v1alpha1/trigger"
 	"github.com/knative/serving/pkg/client/injection/informers/serving/v1beta1/service"
+	"knative.dev/pkg/injection/clients/dynamicclient"
 )
 
 // NewController returns a new HPA reconcile controller.
@@ -32,6 +34,8 @@ func NewController(
 	impl := controller.NewImpl(c, logger, "Autotrigger")
 
 	logger.Info("Setting up event handlers")
+
+	duck.TypedInformerFactory{}
 
 	serviceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 

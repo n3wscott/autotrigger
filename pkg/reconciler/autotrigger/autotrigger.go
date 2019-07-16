@@ -61,7 +61,7 @@ func (c *Reconciler) Reconcile(ctx context.Context, key string) error {
 	}
 
 	// Get the Service resource with this namespace/name
-	original, err := c.serviceLister.Services(namespace).Get(name)
+	original, err := c.serviceLister.Services(namespace).Get(name) // TODO: this needs to be addressables.
 	if apierrs.IsNotFound(err) {
 		// The resource may no longer exist, in which case we stop processing.
 		logger.Errorf("service %q in work queue no longer exists", key)
