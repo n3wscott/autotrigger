@@ -16,7 +16,6 @@ import (
 
 	eventingclient "github.com/knative/eventing/pkg/client/injection/client"
 	"github.com/knative/eventing/pkg/client/injection/informers/eventing/v1alpha1/trigger"
-	"github.com/knative/serving/pkg/client/injection/informers/serving/v1beta1/service"
 	"knative.dev/pkg/injection/clients/dynamicclient"
 )
 
@@ -28,40 +27,40 @@ func NewController(
 	logger := logging.FromContext(ctx)
 
 	triggerInformer := trigger.Get(ctx)
-	serviceInformer := service.Get(ctx)
+	//serviceInformer := service.Get(ctx)
 
-	addressInformer := duck.TypedInformerFactory{
+	addressinformer := duck.TypedInformerFactory{
 		Client:       dynamicclient.Get(ctx),
 		Type:         &duckv1beta1.AddressableType{},
 		ResyncPeriod: 10 * time.Hour,
 		StopChannel:  ctx.Done(),
 	}
 
+	//gvr := schema.GroupVersionResource{
+	//	Group:    "n3wscott.com",
+	//	Version:  "v1alpha1",
+	//	Resource: "tasks",
+	//}
 	gvr := schema.GroupVersionResource{
-		Group:    "n3wscott.com",
+		Group:    "serving.knative.dev",
 		Version:  "v1alpha1",
-		Resource: "tasks",
+		Resource: "services",
 	}
-	taskInformer, taskLister, err := addressInformer.Get(gvr)
+	addressInformer, addressLister, err := addressinformer.Get(gvr)
 	if err != nil {
 		panic(err)
 	}
 
-	_ = taskLister
-	//taskLister.ByNamespace(namespace).Get(name)
-
 	c := &Reconciler{
 		eventingClientSet: eventingclient.Get(ctx),
 		triggerLister:     triggerInformer.Lister(),
-		serviceLister:     serviceInformer.Lister(),
+		addressableLister: addressLister,
 	}
 	impl := controller.NewImpl(c, logger, "Autotrigger-"+uuid.New().String())
 
 	logger.Info("Setting up event handlers")
 
-	taskInformer.AddEventHandler(controller.HandleAll(impl.Enqueue))
-
-	serviceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+	addressInformer.AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	triggerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.Filter(eventingv1alpha1.SchemeGroupVersion.WithKind("Trigger")),

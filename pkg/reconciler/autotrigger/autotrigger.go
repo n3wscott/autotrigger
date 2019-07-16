@@ -23,7 +23,6 @@ import (
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	eventingclientset "github.com/knative/eventing/pkg/client/clientset/versioned"
 	eventinglisters "github.com/knative/eventing/pkg/client/listers/eventing/v1alpha1"
-	servingv1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	"github.com/n3wscott/autotrigger/pkg/reconciler/autotrigger/resources"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -32,8 +31,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
-	"knative.dev/pkg/controller"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 )
 
@@ -159,7 +158,7 @@ func extractTriggerLike(triggers []*eventingv1alpha1.Trigger, like *eventingv1al
 	return triggers, nil
 }
 
-func (c *Reconciler) reconcileTriggers(ctx context.Context, addressable *, existingTriggers []*eventingv1alpha1.Trigger) ([]*eventingv1alpha1.Trigger, error) {
+func (c *Reconciler) reconcileTriggers(ctx context.Context, addressable *duckv1beta1.AddressableType, existingTriggers []*eventingv1alpha1.Trigger) ([]*eventingv1alpha1.Trigger, error) {
 	logger := logging.FromContext(ctx)
 
 	_ = logger
@@ -182,7 +181,7 @@ func (c *Reconciler) reconcileTriggers(ctx context.Context, addressable *, exist
 
 		if trigger == nil {
 			var err error
-			trigger, err = c.eventingClientSet.EventingV1alpha1().Triggers(service.Namespace).Create(desiredTrigger)
+			trigger, err = c.eventingClientSet.EventingV1alpha1().Triggers(addressable.Namespace).Create(desiredTrigger)
 			if err != nil {
 				return nil, err
 			}
@@ -193,7 +192,7 @@ func (c *Reconciler) reconcileTriggers(ctx context.Context, addressable *, exist
 
 	// Delete all the remaining triggers.
 	for _, trigger := range existingTriggers {
-		err := c.eventingClientSet.EventingV1alpha1().Triggers(service.Namespace).Delete(trigger.Name, &metav1.DeleteOptions{})
+		err := c.eventingClientSet.EventingV1alpha1().Triggers(addressable.Namespace).Delete(trigger.Name, &metav1.DeleteOptions{})
 		if err != nil {
 			logger.Errorf("Failed to delete Trigger %q: %v", trigger.Name, err)
 		}

@@ -24,7 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
-	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/ptr"
 )
 
 const (
@@ -65,11 +65,16 @@ func MakeTriggers(addressable *duckv1beta1.AddressableType) ([]*eventingv1alpha1
 		t := &eventingv1alpha1.Trigger{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: names.Trigger(addressable) + "-",
-				Namespace:    service.Namespace,
-				OwnerReferences: []metav1.OwnerReference{
-					*kmeta.NewControllerRef(service),
-				},
-				Labels: MakeLabels(service),
+				Namespace:    addressable.Namespace,
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion:         addressable.APIVersion,
+					Kind:               addressable.Kind,
+					Name:               addressable.Name,
+					UID:                addressable.UID,
+					BlockOwnerDeletion: ptr.Bool(true),
+					Controller:         ptr.Bool(true),
+				}},
+				Labels: MakeLabels(addressable),
 			},
 			Spec: eventingv1alpha1.TriggerSpec{
 				Broker: filter.Broker,
