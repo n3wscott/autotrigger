@@ -1039,6 +1039,7 @@
     "k8s.io/apimachinery/pkg/labels",
     "k8s.io/client-go/tools/cache",
     "knative.dev/pkg/apis/duck",
+    "knative.dev/pkg/apis/duck/v1beta1",
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/controller",
     "knative.dev/pkg/injection/clients/dynamicclient",

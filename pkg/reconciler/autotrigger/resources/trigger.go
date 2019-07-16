@@ -20,10 +20,10 @@ import (
 	"encoding/json"
 	"fmt"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	servingv1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	"github.com/n3wscott/autotrigger/pkg/reconciler/autotrigger/resources/names"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -38,8 +38,8 @@ type brokerFilters struct {
 }
 
 // MakeTrigger creates a Trigger from a Service object.
-func MakeTriggers(service *servingv1beta1.Service) ([]*eventingv1alpha1.Trigger, error) {
-	rawFilter, ok := service.Annotations[filterAnnotation]
+func MakeTriggers(addressable *duckv1beta1.AddressableType) ([]*eventingv1alpha1.Trigger, error) {
+	rawFilter, ok := addressable.Annotations[filterAnnotation]
 	if !ok {
 		return []*eventingv1alpha1.Trigger(nil), nil
 	}
@@ -55,16 +55,16 @@ func MakeTriggers(service *servingv1beta1.Service) ([]*eventingv1alpha1.Trigger,
 
 	subscriber := &eventingv1alpha1.SubscriberSpec{
 		Ref: &corev1.ObjectReference{
-			APIVersion: "serving.knative.dev/v1beta1",
-			Kind:       "Service",
-			Name:       service.Name,
+			APIVersion: addressable.APIVersion,
+			Kind:       addressable.Kind,
+			Name:       addressable.Name,
 		},
 	}
 
 	for _, filter := range filters {
 		t := &eventingv1alpha1.Trigger{
 			ObjectMeta: metav1.ObjectMeta{
-				GenerateName: names.Trigger(service) + "-",
+				GenerateName: names.Trigger(addressable) + "-",
 				Namespace:    service.Namespace,
 				OwnerReferences: []metav1.OwnerReference{
 					*kmeta.NewControllerRef(service),

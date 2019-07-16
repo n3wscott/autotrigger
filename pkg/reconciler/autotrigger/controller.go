@@ -2,10 +2,14 @@ package autotrigger
 
 import (
 	"context"
-	"knative.dev/pkg/apis/duck"
+	"github.com/google/uuid"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"time"
 
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/pkg/apis/duck"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -26,16 +30,36 @@ func NewController(
 	triggerInformer := trigger.Get(ctx)
 	serviceInformer := service.Get(ctx)
 
+	addressInformer := duck.TypedInformerFactory{
+		Client:       dynamicclient.Get(ctx),
+		Type:         &duckv1beta1.AddressableType{},
+		ResyncPeriod: 10 * time.Hour,
+		StopChannel:  ctx.Done(),
+	}
+
+	gvr := schema.GroupVersionResource{
+		Group:    "n3wscott.com",
+		Version:  "v1alpha1",
+		Resource: "tasks",
+	}
+	taskInformer, taskLister, err := addressInformer.Get(gvr)
+	if err != nil {
+		panic(err)
+	}
+
+	_ = taskLister
+	//taskLister.ByNamespace(namespace).Get(name)
+
 	c := &Reconciler{
 		eventingClientSet: eventingclient.Get(ctx),
 		triggerLister:     triggerInformer.Lister(),
 		serviceLister:     serviceInformer.Lister(),
 	}
-	impl := controller.NewImpl(c, logger, "Autotrigger")
+	impl := controller.NewImpl(c, logger, "Autotrigger-"+uuid.New().String())
 
 	logger.Info("Setting up event handlers")
 
-	duck.TypedInformerFactory{}
+	taskInformer.AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	serviceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 

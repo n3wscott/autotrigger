@@ -17,9 +17,9 @@ limitations under the License.
 package names
 
 import (
-	"github.com/knative/serving/pkg/apis/serving/v1beta1"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
-func Trigger(service *v1beta1.Service) string {
-	return service.Name
+func Trigger(addressable *duckv1beta1.AddressableType) string {
+	return addressable.Name
 }
