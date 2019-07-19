@@ -19,6 +19,7 @@ package autotrigger
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	eventingclientset "github.com/knative/eventing/pkg/client/clientset/versioned"
@@ -44,6 +45,7 @@ type Reconciler struct {
 	// Eventing
 	eventingClientSet eventingclientset.Interface
 	triggerLister     eventinglisters.TriggerLister
+	gvr               schema.GroupVersionResource
 }
 
 // Check that our Reconciler implements controller.Reconciler
@@ -52,6 +54,9 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 // Reconcile
 func (c *Reconciler) Reconcile(ctx context.Context, key string) error {
 	logger := logging.FromContext(ctx)
+
+	logger.Infof("Reconcile %s", c.gvr.String())
+
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
