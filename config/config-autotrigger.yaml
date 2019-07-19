@@ -23,9 +23,9 @@ metadata:
 data:
   gvrs: |
     [{
-       group: "serving.knative.dev",
-       version:  "v1alpha1",
-       resource: "services",
+       "group": "serving.knative.dev",
+       "version":  "v1alpha1",
+       "resource": "services"
     }]
 
   _example: |
@@ -45,7 +45,7 @@ data:
 
     gvrs: |
       [{
-         group: "serving.knative.dev",
-         version:  "v1alpha1",
-         resource: "services",
+         "group": "serving.knative.dev",
+         "version":  "v1alpha1",
+         "resource": "services"
       }]
