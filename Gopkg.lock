@@ -989,7 +989,7 @@
   revision = "5e45bb682580c9be5ffa4d27d367f0eeba125c7b"
 
 [[projects]]
-  digest = "1:1ce30bcd03246947a1e1692e0c5e91f1f7df3fc9a98b691df4365c9466eed484"
+  digest = "1:c647884fad1913beca9d713f0f2948ee1c149f295faa9627f80219e26b8865c3"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1000,6 +1000,7 @@
     "configmap",
     "controller",
     "injection",
+    "injection/clients/dynamicclient",
     "injection/clients/kubeclient",
     "injection/sharedmain",
     "kmeta",
@@ -1011,7 +1012,6 @@
     "ptr",
     "signals",
     "system",
-    "tracker",
     "webhook",
   ]
   pruneopts = "UT"
@@ -1037,16 +1037,16 @@
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/labels",
-    "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/tools/cache",
-    "k8s.io/client-go/tools/record",
+    "knative.dev/pkg/apis/duck",
+    "knative.dev/pkg/apis/duck/v1beta1",
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/controller",
+    "knative.dev/pkg/injection/clients/dynamicclient",
     "knative.dev/pkg/injection/sharedmain",
     "knative.dev/pkg/kmeta",
     "knative.dev/pkg/logging",
     "knative.dev/pkg/metrics",
-    "knative.dev/pkg/tracker",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -16,8 +16,7 @@ limitations under the License.
 package resources
 
 import (
-	"github.com/knative/serving/pkg/apis/serving"
-	"github.com/knative/serving/pkg/apis/serving/v1beta1"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"strings"
 )
 
@@ -25,8 +24,8 @@ const (
 	autoTriggerLabel = "eventing.knative.dev/autotrigger"
 )
 
-func AutoTriggerEnabled(s *v1beta1.Service) bool {
-	if enabled, ok := s.Labels[autoTriggerLabel]; ok {
+func AutoTriggerEnabled(a *duckv1beta1.AddressableType) bool {
+	if enabled, ok := a.Labels[autoTriggerLabel]; ok {
 		if strings.EqualFold(enabled, "true") {
 			return true
 		}
@@ -35,12 +34,11 @@ func AutoTriggerEnabled(s *v1beta1.Service) bool {
 }
 
 // MakeLabels constructs the labels we will apply to Trigger resources.
-func MakeLabels(s *v1beta1.Service) map[string]string {
-	labels := make(map[string]string, len(s.ObjectMeta.Labels)+1)
-	labels[serving.ServiceLabelKey] = s.Name
+func MakeLabels(a *duckv1beta1.AddressableType) map[string]string {
+	labels := make(map[string]string, len(a.ObjectMeta.Labels))
 
 	// Pass through the labels on the Service to child resources.
-	for k, v := range s.ObjectMeta.Labels {
+	for k, v := range a.ObjectMeta.Labels {
 		labels[k] = v
 	}
 	return labels

@@ -50,6 +50,8 @@ spec:
         volumeMounts:
         - name: config-logging
           mountPath: /etc/config-logging
+        - name: config-autotrigger
+          mountPath: /etc/config-autotrigger
         env:
           - name: SYSTEM_NAMESPACE
             valueFrom:
@@ -65,3 +67,6 @@ spec:
         - name: config-logging
           configMap:
             name: config-logging
+        - name: config-autotrigger
+          configMap:
+            name: config-autotrigger
