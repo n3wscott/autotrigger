@@ -19,11 +19,12 @@ package resources
 import (
 	"encoding/json"
 	"fmt"
-	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/n3wscott/autotrigger/pkg/reconciler/autotrigger/resources/names"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/apis/v1alpha1"
 	"knative.dev/pkg/ptr"
 )
 
@@ -38,7 +39,7 @@ type brokerFilters struct {
 }
 
 // MakeTrigger creates a Trigger from a Service object.
-func MakeTriggers(addressable *duckv1beta1.AddressableType) ([]*eventingv1alpha1.Trigger, error) {
+func MakeTriggers(addressable *duckv1.AddressableType) ([]*eventingv1alpha1.Trigger, error) {
 	rawFilter, ok := addressable.Annotations[filterAnnotation]
 	if !ok {
 		return []*eventingv1alpha1.Trigger(nil), nil
@@ -53,7 +54,7 @@ func MakeTriggers(addressable *duckv1beta1.AddressableType) ([]*eventingv1alpha1
 
 	triggers := make([]*eventingv1alpha1.Trigger, 0)
 
-	subscriber := &eventingv1alpha1.SubscriberSpec{
+	subscriber := &v1alpha1.Destination{
 		Ref: &corev1.ObjectReference{
 			APIVersion: addressable.APIVersion,
 			Kind:       addressable.Kind,
@@ -79,7 +80,8 @@ func MakeTriggers(addressable *duckv1beta1.AddressableType) ([]*eventingv1alpha1
 			Spec: eventingv1alpha1.TriggerSpec{
 				Broker: filter.Broker,
 				Filter: &eventingv1alpha1.TriggerFilter{
-					SourceAndType: &eventingv1alpha1.TriggerFilterSourceAndType{
+					// TODO: update this
+					DeprecatedSourceAndType: &eventingv1alpha1.TriggerFilterSourceAndType{
 						Source: filter.Source,
 						Type:   filter.Type,
 					},

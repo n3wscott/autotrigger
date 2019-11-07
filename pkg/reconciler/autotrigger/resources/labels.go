@@ -16,15 +16,16 @@ limitations under the License.
 package resources
 
 import (
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"strings"
+
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 const (
 	autoTriggerLabel = "eventing.knative.dev/autotrigger"
 )
 
-func AutoTriggerEnabled(a *duckv1beta1.AddressableType) bool {
+func AutoTriggerEnabled(a *duckv1.AddressableType) bool {
 	if enabled, ok := a.Labels[autoTriggerLabel]; ok {
 		if strings.EqualFold(enabled, "true") {
 			return true
@@ -34,7 +35,7 @@ func AutoTriggerEnabled(a *duckv1beta1.AddressableType) bool {
 }
 
 // MakeLabels constructs the labels we will apply to Trigger resources.
-func MakeLabels(a *duckv1beta1.AddressableType) map[string]string {
+func MakeLabels(a *duckv1.AddressableType) map[string]string {
 	labels := make(map[string]string, len(a.ObjectMeta.Labels))
 
 	// Pass through the labels on the Service to child resources.
