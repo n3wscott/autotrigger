@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	"knative.dev/pkg/apis/duck"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -30,7 +30,7 @@ func NewControllerConstructor(name string, gvr schema.GroupVersionResource) inje
 
 		addressinformer := &duck.TypedInformerFactory{
 			Client:       dynamicclient.Get(ctx),
-			Type:         &duckv1beta1.AddressableType{},
+			Type:         &duckv1.AddressableType{},
 			ResyncPeriod: 10 * time.Hour,
 			StopChannel:  ctx.Done(),
 		}

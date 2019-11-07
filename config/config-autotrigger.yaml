@@ -24,7 +24,7 @@ data:
   gvrs: |
     [{
        "group": "serving.knative.dev",
-       "version":  "v1alpha1",
+       "version":  "v1",
        "resource": "services"
     }]
 
@@ -46,6 +46,6 @@ data:
     gvrs: |
       [{
          "group": "serving.knative.dev",
-         "version":  "v1alpha1",
+         "version":  "v1",
          "resource": "services"
       }]
