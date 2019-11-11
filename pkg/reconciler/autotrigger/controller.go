@@ -2,7 +2,6 @@ package autotrigger
 
 import (
 	"context"
-	"knative.dev/pkg/injection"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -12,6 +11,7 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/injection"
 	"knative.dev/pkg/logging"
 
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"

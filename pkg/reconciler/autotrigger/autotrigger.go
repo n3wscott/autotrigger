@@ -102,6 +102,8 @@ func (c *Reconciler) reconcile(ctx context.Context, addressable *duckv1.Addressa
 
 	triggers = filterTriggers(addressable, triggers)
 
+	// TODO: the trigger should only be made on the top most labeled addressable resource in the owner chain.
+
 	if errors.IsNotFound(err) || len(triggers) == 0 { // TODO: might not get an IsNotFound error for list.
 		triggers, err = c.createTriggers(ctx, addressable)
 		if err != nil {
