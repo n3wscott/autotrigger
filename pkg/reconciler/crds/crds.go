@@ -155,3 +155,7 @@ func (c *Reconciler) ensureAddressableController(ctx context.Context, crd *v1bet
 
 	return nil
 }
+
+func (c *Reconciler) IsAddressable(ctx context.Context) bool {
+	return false
+}
