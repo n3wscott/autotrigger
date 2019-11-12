@@ -19,6 +19,7 @@ package autotrigger
 import (
 	"context"
 	"fmt"
+	"github.com/n3wscott/autotrigger/pkg/reconciler"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -43,6 +44,8 @@ import (
 type Reconciler struct {
 	// Addressable
 	addressableLister cache.GenericLister
+
+	info reconciler.AddressableInfo
 
 	// Eventing
 	eventingClientSet eventingclientset.Interface
@@ -97,6 +100,14 @@ func (c *Reconciler) reconcile(ctx context.Context, addressable *duckv1.Addressa
 	if addressable.GetDeletionTimestamp() != nil {
 		// All triggers that were created from service are owned by that service, so they will be cleaned up.
 		return nil
+	}
+
+	for _, owner := range addressable.OwnerReferences {
+		gvk := schema.FromAPIVersionAndKind(owner.APIVersion, owner.Kind)
+		if c.info.IsGVKAddressable(ctx, gvk) {
+			// TODO: for now, we will not create triggers for children of addressable objects.
+			return nil
+		}
 	}
 
 	triggers, err := c.triggerLister.Triggers(addressable.Namespace).List(labels.SelectorFromSet(resources.MakeLabels(addressable)))
