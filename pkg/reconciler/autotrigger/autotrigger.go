@@ -72,12 +72,13 @@ func (c *Reconciler) Reconcile(ctx context.Context, key string) error {
 	var ok bool
 	var original *duckv1.AddressableType
 	if original, ok = runtimeobj.(*duckv1.AddressableType); !ok {
-
+		logger.Errorf("runtime object is not convertible to addressable type, key=%q", key)
+		return nil
 	}
 
 	if apierrs.IsNotFound(err) {
 		// The resource may no longer exist, in which case we stop processing.
-		logger.Errorf("service %q in work queue no longer exists", key)
+		logger.Errorf("addressable %q in work queue no longer exists", key)
 		return nil
 	} else if err != nil {
 		return err
@@ -107,14 +108,14 @@ func (c *Reconciler) reconcile(ctx context.Context, addressable *duckv1.Addressa
 	if errors.IsNotFound(err) || len(triggers) == 0 { // TODO: might not get an IsNotFound error for list.
 		triggers, err = c.createTriggers(ctx, addressable)
 		if err != nil {
-			logger.Errorf("Failed to create Triggers for Service %q: %v", addressable.Name, err)
+			logger.Errorf("failed to create Triggers for Service %q: %v", addressable.Name, err)
 			return err
 		}
 	} else if err != nil {
-		logger.Errorw(fmt.Sprintf("Failed to Get Triggers for Service %q", addressable.Name), zap.Error(err))
+		logger.Errorw(fmt.Sprintf("failed to Get Triggers for Service %q", addressable.Name), zap.Error(err))
 		return err
 	} else if triggers, err = c.reconcileTriggers(ctx, addressable, triggers); err != nil {
-		logger.Errorw(fmt.Sprintf("Failed to reconcile Triggers for Service %q", addressable.Name), zap.Error(err))
+		logger.Errorw(fmt.Sprintf("failed to reconcile Triggers for Service %q", addressable.Name), zap.Error(err))
 		return err
 	}
 
@@ -203,7 +204,7 @@ func (c *Reconciler) reconcileTriggers(ctx context.Context, addressable *duckv1.
 	for _, trigger := range existingTriggers {
 		err := c.eventingClientSet.EventingV1alpha1().Triggers(addressable.Namespace).Delete(trigger.Name, &metav1.DeleteOptions{})
 		if err != nil {
-			logger.Errorf("Failed to delete Trigger %q: %v", trigger.Name, err)
+			logger.Errorf("failed to delete Trigger %q: %v", trigger.Name, err)
 		}
 	}
 
