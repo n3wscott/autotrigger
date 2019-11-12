@@ -19,22 +19,24 @@ package autotrigger
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	eventingclientset "github.com/knative/eventing/pkg/client/clientset/versioned"
-	eventinglisters "github.com/knative/eventing/pkg/client/listers/eventing/v1alpha1"
-	"github.com/n3wscott/autotrigger/pkg/reconciler/autotrigger/resources"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/cache"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+
+	"github.com/n3wscott/autotrigger/pkg/reconciler/autotrigger/resources"
 )
 
 // Reconciler implements controller.Reconciler for Addressable resources.
@@ -68,14 +70,15 @@ func (c *Reconciler) Reconcile(ctx context.Context, key string) error {
 	runtimeobj, err := c.addressableLister.ByNamespace(namespace).Get(name)
 
 	var ok bool
-	var original *duckv1beta1.AddressableType
-	if original, ok = runtimeobj.(*duckv1beta1.AddressableType); !ok {
-
+	var original *duckv1.AddressableType
+	if original, ok = runtimeobj.(*duckv1.AddressableType); !ok {
+		logger.Errorf("runtime object is not convertible to addressable type, key=%q", key)
+		return nil
 	}
 
 	if apierrs.IsNotFound(err) {
 		// The resource may no longer exist, in which case we stop processing.
-		logger.Errorf("service %q in work queue no longer exists", key)
+		logger.Errorf("addressable %q in work queue no longer exists", key)
 		return nil
 	} else if err != nil {
 		return err
@@ -88,7 +91,7 @@ func (c *Reconciler) Reconcile(ctx context.Context, key string) error {
 	return c.reconcile(ctx, original.DeepCopy())
 }
 
-func (c *Reconciler) reconcile(ctx context.Context, addressable *duckv1beta1.AddressableType) error {
+func (c *Reconciler) reconcile(ctx context.Context, addressable *duckv1.AddressableType) error {
 	logger := logging.FromContext(ctx)
 
 	if addressable.GetDeletionTimestamp() != nil {
@@ -100,24 +103,26 @@ func (c *Reconciler) reconcile(ctx context.Context, addressable *duckv1beta1.Add
 
 	triggers = filterTriggers(addressable, triggers)
 
+	// TODO: the trigger should only be made on the top most labeled addressable resource in the owner chain.
+
 	if errors.IsNotFound(err) || len(triggers) == 0 { // TODO: might not get an IsNotFound error for list.
 		triggers, err = c.createTriggers(ctx, addressable)
 		if err != nil {
-			logger.Errorf("Failed to create Triggers for Service %q: %v", addressable.Name, err)
+			logger.Errorf("failed to create Triggers for Service %q: %v", addressable.Name, err)
 			return err
 		}
 	} else if err != nil {
-		logger.Errorw(fmt.Sprintf("Failed to Get Triggers for Service %q", addressable.Name), zap.Error(err))
+		logger.Errorw(fmt.Sprintf("failed to Get Triggers for Service %q", addressable.Name), zap.Error(err))
 		return err
 	} else if triggers, err = c.reconcileTriggers(ctx, addressable, triggers); err != nil {
-		logger.Errorw(fmt.Sprintf("Failed to reconcile Triggers for Service %q", addressable.Name), zap.Error(err))
+		logger.Errorw(fmt.Sprintf("failed to reconcile Triggers for Service %q", addressable.Name), zap.Error(err))
 		return err
 	}
 
 	return nil
 }
 
-func filterTriggers(addressable *duckv1beta1.AddressableType, triggers []*eventingv1alpha1.Trigger) []*eventingv1alpha1.Trigger {
+func filterTriggers(addressable *duckv1.AddressableType, triggers []*eventingv1alpha1.Trigger) []*eventingv1alpha1.Trigger {
 	filteredTriggers := []*eventingv1alpha1.Trigger(nil)
 	for _, trigger := range triggers {
 		if metav1.IsControlledBy(trigger, addressable) {
@@ -127,7 +132,7 @@ func filterTriggers(addressable *duckv1beta1.AddressableType, triggers []*eventi
 	return filteredTriggers
 }
 
-func (c *Reconciler) createTriggers(ctx context.Context, addressable *duckv1beta1.AddressableType) ([]*eventingv1alpha1.Trigger, error) {
+func (c *Reconciler) createTriggers(ctx context.Context, addressable *duckv1.AddressableType) ([]*eventingv1alpha1.Trigger, error) {
 	logger := logging.FromContext(ctx)
 
 	triggers, err := resources.MakeTriggers(addressable)
@@ -163,7 +168,7 @@ func extractTriggerLike(triggers []*eventingv1alpha1.Trigger, like *eventingv1al
 	return triggers, nil
 }
 
-func (c *Reconciler) reconcileTriggers(ctx context.Context, addressable *duckv1beta1.AddressableType, existingTriggers []*eventingv1alpha1.Trigger) ([]*eventingv1alpha1.Trigger, error) {
+func (c *Reconciler) reconcileTriggers(ctx context.Context, addressable *duckv1.AddressableType, existingTriggers []*eventingv1alpha1.Trigger) ([]*eventingv1alpha1.Trigger, error) {
 	logger := logging.FromContext(ctx)
 
 	_ = logger
@@ -199,7 +204,7 @@ func (c *Reconciler) reconcileTriggers(ctx context.Context, addressable *duckv1b
 	for _, trigger := range existingTriggers {
 		err := c.eventingClientSet.EventingV1alpha1().Triggers(addressable.Namespace).Delete(trigger.Name, &metav1.DeleteOptions{})
 		if err != nil {
-			logger.Errorf("Failed to delete Trigger %q: %v", trigger.Name, err)
+			logger.Errorf("failed to delete Trigger %q: %v", trigger.Name, err)
 		}
 	}
 

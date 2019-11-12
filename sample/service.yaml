@@ -1,6 +1,6 @@
 # This is a very simple Knative Service that writes the incoming CloudEvent to its log.
 
-apiVersion: serving.knative.dev/v1beta1
+apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: auto-event-display

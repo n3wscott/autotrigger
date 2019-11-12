@@ -20,27 +20,24 @@ import (
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/knative/serving/pkg/apis/serving/v1alpha1"
-
-	"github.com/n3wscott/autotrigger/pkg/reconciler"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
-func TestNamer(t *testing.T) {
+func TestTrigger(t *testing.T) {
 	tests := []struct {
 		name    string
-		service *v1alpha1.Service
-		f       func(*v1alpha1.Service) string
+		service *duckv1.AddressableType
+		f       func(*duckv1.AddressableType) string
 		want    string
 	}{{
 		name: "Trigger",
-		service: &v1alpha1.Service{
+		service: &duckv1.AddressableType{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "foo",
 				Namespace: "default",
 			},
 		},
-		f:    reconciler.Trigger,
+		f:    Trigger,
 		want: "foo",
 	}}
 
