@@ -53,6 +53,7 @@ type Reconciler struct {
 	// Local state
 
 	controllers map[schema.GroupVersionResource]runningController
+	kToR        map[schema.GroupVersionKind]schema.GroupVersionResource
 	lock        sync.Mutex
 }
 
@@ -63,9 +64,12 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 func (c *Reconciler) Reconcile(ctx context.Context, key string) error {
 	logger := logging.FromContext(ctx)
 
-	// Create a map if needed.
+	// Create maps if needed.
 	if c.controllers == nil {
 		c.controllers = make(map[schema.GroupVersionResource]runningController)
+	}
+	if c.kToR == nil {
+		c.kToR = make(map[schema.GroupVersionKind]schema.GroupVersionResource)
 	}
 
 	// Convert the namespace/name string into a distinct namespace and name
@@ -105,6 +109,12 @@ func (c *Reconciler) ensureAddressableController(ctx context.Context, crd *v1bet
 			Version:  v.Name,
 			Resource: crd.Spec.Names.Plural,
 		}
+
+		c.kToR[schema.GroupVersionKind{
+			Group:   crd.Spec.Group,
+			Version: v.Name,
+			Kind:    crd.Spec.Names.Kind,
+		}] = *gvr
 	}
 	if gvr == nil {
 		return fmt.Errorf("unable to find gvr for %s", crd.ClusterName)
@@ -156,6 +166,7 @@ func (c *Reconciler) ensureAddressableController(ctx context.Context, crd *v1bet
 	return nil
 }
 
-func (c *Reconciler) IsAddressable(ctx context.Context) bool {
-	return false
+func (c *Reconciler) IsGVKAddressable(ctx context.Context, gvk schema.GroupVersionKind) bool {
+	_, found := c.kToR[gvk]
+	return found
 }
