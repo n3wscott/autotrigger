@@ -134,7 +134,7 @@ func (c *Reconciler) ensureAddressableController(ctx context.Context, crd *v1bet
 	}
 
 	// Auto Trigger Constructor
-	atc := autotrigger.NewControllerConstructor(crd.ClusterName, *gvr)
+	atc := autotrigger.NewControllerConstructor(crd.ClusterName, *gvr, c)
 	// Auto Trigger Context
 	atctx, cancel := context.WithCancel(c.ogctx)
 	// Auto Trigger

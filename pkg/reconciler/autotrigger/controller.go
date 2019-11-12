@@ -2,6 +2,7 @@ package autotrigger
 
 import (
 	"context"
+	"github.com/n3wscott/autotrigger/pkg/reconciler"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -19,7 +20,7 @@ import (
 	"knative.dev/pkg/injection/clients/dynamicclient"
 )
 
-func NewControllerConstructor(name string, gvr schema.GroupVersionResource) injection.ControllerConstructor {
+func NewControllerConstructor(name string, gvr schema.GroupVersionResource, info reconciler.AddressableInfo) injection.ControllerConstructor {
 	return func(
 		ctx context.Context,
 		cmw configmap.Watcher,
@@ -45,6 +46,7 @@ func NewControllerConstructor(name string, gvr schema.GroupVersionResource) inje
 			triggerLister:     triggerInformer.Lister(),
 			addressableLister: addressLister,
 			gvr:               gvr,
+			info:              info,
 		}
 		impl := controller.NewImpl(c, logger, name)
 
