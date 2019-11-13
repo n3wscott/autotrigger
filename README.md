@@ -1,7 +1,18 @@
-# autotrigger
+# AutoTrigger
 
-Automatically create triggers based on labels and annotations on Knative
-Serving Services.
+Magically create Triggers based on labels/annotations on any [Knative](https://knative.dev)
+[Addressable](https://godoc.org/github.com/knative/pkg/apis/duck/v1#Addressable) resource!
+
+## Install
+
+```shell
+kubectl apply -f https://github.com/n3wscott/autotrigger/releases/download/v0.1.0/release.yaml
+```
+
+## Usage
+
+AutoTrigger automatically create triggers based on labels and annotations on Knative
+[Addressable](https://godoc.org/github.com/knative/pkg/apis/duck/v1#Addressable) resources.
 
 Looking for the `eventing.knative.dev/autotrigger` label:
 
@@ -49,10 +60,10 @@ annotations:
     [{"type":"cloudevents.event.foo"},{"type":"cloudevents.event.bar"}]
 ```
 
-Full example:
+### Full Example
 
 ```yaml
-apiVersion: serving.knative.dev/v1alpha1
+apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: auto-event-display
@@ -62,12 +73,10 @@ metadata:
     trigger.eventing.knative.dev/filter: |
       [{"type":"botless.slack.message"},{"type":"botless.bot.command"}]
 spec:
-  runLatest:
-    configuration:
-      revisionTemplate:
-        spec:
-          container:
-            image: github.com/knative/eventing-sources/cmd/event_display
+  template:
+    spec:
+      containers:
+        - image: github.com/knative/eventing-sources/cmd/event_display
 ```
 
 ### Known Issues:

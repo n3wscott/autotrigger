@@ -32,10 +32,24 @@ const (
 	filterAnnotation = "trigger.eventing.knative.dev/filter"
 )
 
-type brokerFilters struct {
-	Broker string `json:"broker,omitempty"`
-	Type   string `json:"type,omitempty"`
-	Source string `json:"source,omitempty"`
+type brokerFilters map[string]string
+
+func (bf brokerFilters) Broker() string {
+	if b, ok := bf["broker"]; ok {
+		return b
+	}
+	return "default"
+}
+
+func (bf brokerFilters) Filters() *eventingv1alpha1.TriggerFilterAttributes {
+	f := make(eventingv1alpha1.TriggerFilterAttributes, 0)
+	for k, v := range bf {
+		if k == "broker" {
+			continue
+		}
+		f[k] = v
+	}
+	return &f
 }
 
 // MakeTrigger creates a Trigger from a Service object.
@@ -78,13 +92,9 @@ func MakeTriggers(addressable *duckv1.AddressableType) ([]*eventingv1alpha1.Trig
 				Labels: MakeLabels(addressable),
 			},
 			Spec: eventingv1alpha1.TriggerSpec{
-				Broker: filter.Broker,
+				Broker: filter.Broker(),
 				Filter: &eventingv1alpha1.TriggerFilter{
-					// TODO: update this
-					DeprecatedSourceAndType: &eventingv1alpha1.TriggerFilterSourceAndType{
-						Source: filter.Source,
-						Type:   filter.Type,
-					},
+					Attributes: filter.Filters(),
 				},
 				Subscriber: subscriber,
 			},
